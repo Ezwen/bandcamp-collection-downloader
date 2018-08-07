@@ -25,7 +25,7 @@ build:
       - .gradle
   artifacts:
     paths:
-    - build/libs/bandcamp-collection-downloader-all.jar
+    - build/libs
 
 #test:
 #  stage: test
