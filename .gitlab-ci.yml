@@ -23,10 +23,9 @@ build:
     paths:
       - build
       - .gradle
-
-artifacts:
-  paths:
-  - build/libs
+  artifacts:
+    paths:
+    - build/libs
 
 #test:
 #  stage: test
