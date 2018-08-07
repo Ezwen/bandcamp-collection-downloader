@@ -29,14 +29,14 @@ This JSON file can then be used using the mandatory parameter `--cookies-file`:
 ## Installation
 
 After each commit, the continuous integration (CI) builds a new standalone (ie. that includes all dependencies) executable jar that can be used as is.
-The last produced jar can always be found [at this link](https://framagit.org/Gwendal/bandcamp-collection-downloader/-/jobs/artifacts/master/raw/build/libs/bandcamp-collection-downloader-all.jar?job=build).
+The last produced jar can always be found [at this link](https://framagit.org/Gwendal/bandcamp-collection-downloader/-/jobs/artifacts/master/raw/build/libs/bandcamp-collection-downloader.jar?job=build).
 
 ## Usage
 
 Example of command:
 
 ```dtd
-$ java -jar bandcamp-collection-downloader-all.jar --cookies-file=cookies.json --download-folder=~/Music myBandcampIdentifier
+$ java -jar bandcamp-collection-downloader.jar --cookies-file=cookies.json --download-folder=~/Music myBandcampIdentifier
 ```
 
 This will download all albums ever bought by the Bandcamp account *myBandcampIdentifier*, 
@@ -54,7 +54,7 @@ $ cd bandcamp-collection-downloader
 $ gradle fatjar
 ```
 
-The resulting binary can then be found in `build/libs/bandcamp-collection-downloader-all.jar`.
+The resulting binary can then be found in `build/libs/bandcamp-collection-downloader.jar`.
 
 ## Dependencies
  
