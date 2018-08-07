@@ -118,7 +118,8 @@ data class Args(
 
         @CommandLine.Option(names = arrayOf("--download-folder", "-d"), required = false,
                 description = arrayOf("The folder in which downloaded albums must be extracted.",
-                        "The following structure is considered: <pathToDownloadFolder>/<artist>/<year> - <album>."))
+                        "The following structure is considered: <pathToDownloadFolder>/<artist>/<year> - <album>.",
+                        "(default: current folder)"))
         var pathToDownloadFolder: Path = Paths.get("."),
 
         @CommandLine.Option(names = arrayOf("-h", "--help"), usageHelp = true, description = arrayOf("Display this help message."))
