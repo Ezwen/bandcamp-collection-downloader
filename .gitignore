@@ -4,3 +4,5 @@ out
 /gradlew.bat
 /gradle/wrapper/gradle-wrapper.properties
 *.iml
+.gradle
+.idea
