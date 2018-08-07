@@ -157,7 +157,7 @@ fun main(args: Array<String>) {
     val doc = Jsoup.connect("https://bandcamp.com/$bandcampUser")
             .cookies(cookies)
             .get()
-    println("""Found collection page: + "${doc.title()}"""")
+    println("""Found collection page: "${doc.title()}"""")
     if (!doc.toString().contains("buy-now")) {
         println("Provided cookies appear to be working!")
     }
