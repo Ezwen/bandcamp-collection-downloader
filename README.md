@@ -58,4 +58,3 @@ The resulting binary can then be found in `build/libs/bandcamp-collection-downlo
  - [zt-zip](https://github.com/zeroturnaround/zt-zip) to unzip downloaded albums,
  - [picocli](https://picocli.info/) to provide a fancy CLI,
  - [Gson](https://github.com/google/gson) to parse JSON.
-m.google.code.gson:gson:2.8.5'
