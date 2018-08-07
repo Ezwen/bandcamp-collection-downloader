@@ -51,7 +51,7 @@ $ gradle fatjar
 
 The resulting binary can then be found in `build/libs/bandcamp-collection-downloader-all.jar`.
 
- ## Dependencies
+## Dependencies
  
  This tool relies on the following libraries:
  - [jsoup](https://jsoup.org/) to get and parse HTML,
