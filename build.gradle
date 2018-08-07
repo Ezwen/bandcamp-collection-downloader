@@ -7,11 +7,11 @@ repositories {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     compile 'org.jsoup:jsoup:1.11.3'
-    compile 'org.seleniumhq.selenium:selenium-java:3.13.0'
     compile 'org.zeroturnaround:zt-zip:1.13'
     compile 'org.slf4j:slf4j-simple:1.6.4'
     compile 'com.sun.mail:javax.mail:1.6.1'
     compile 'info.picocli:picocli:3.4.0'
+    compile 'com.google.code.gson:gson:2.8.5'
 }
 compileKotlin {
     kotlinOptions {
