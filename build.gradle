@@ -23,3 +23,13 @@ compileTestKotlin {
         jvmTarget = "1.8"
     }
 }
+
+//create a single Jar with all dependencies
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Main-Class': 'bandcampcollectiondownloader.BandcampCollectionDownloaderKt'
+    }
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
