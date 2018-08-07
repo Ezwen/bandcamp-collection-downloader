@@ -1,6 +1,6 @@
 # Bandcamp collection downloader
 
-A command-line tool to automatically download all albums of a Bandcamp collection.
+A command-line tool written in Kotlin to automatically download all albums of a Bandcamp collection.
 
 
 ```
@@ -51,4 +51,11 @@ $ gradle fatjar
 
 The resulting binary can then be found in `build/libs/bandcamp-collection-downloader-all.jar`.
 
+ ## Dependencies
  
+ This tool relies on the following libraries:
+ - [jsoup](https://jsoup.org/) to get and parse HTML,
+ - [zt-zip](https://github.com/zeroturnaround/zt-zip) to unzip downloaded albums,
+ - [picocli](https://picocli.info/) to provide a fancy CLI,
+ - [Gson](https://github.com/google/gson) to parse JSON.
+m.google.code.gson:gson:2.8.5'
