@@ -147,7 +147,7 @@ fun main(args: Array<String>) {
     val downloadFormat = parsedArgs.audioFormat
     val downloadFolder = parsedArgs.pathToDownloadFolder
 
-    // Parse JSON cookies (obtained with some Firefox addon)
+    // Parse JSON cookies (obtained with "Cookie Quick Manager" Firefox addon)
     val gson = Gson()
     val jsonData = String(Files.readAllBytes(Paths.get(cookiesFile)))
     val parsedCookies = gson.fromJson(jsonData, Array<ParsedCookie>::class.java)
@@ -157,9 +157,9 @@ fun main(args: Array<String>) {
     val doc = Jsoup.connect("https://bandcamp.com/$bandcampUser")
             .cookies(cookies)
             .get()
-    println(doc.title())
+    println("""Found collection page: + "${doc.title()}"""")
     if (!doc.toString().contains("buy-now")) {
-        println("Cookies appear to be working!")
+        println("Provided cookies appear to be working!")
     }
 
     // Get download pages
