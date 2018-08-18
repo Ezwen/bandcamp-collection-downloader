@@ -12,6 +12,8 @@ dependencies {
     compile 'com.sun.mail:javax.mail:1.6.1'
     compile 'info.picocli:picocli:3.4.0'
     compile 'com.google.code.gson:gson:2.8.5'
+    testCompile 'org.junit.jupiter:junit-jupiter-api:5.2.0'
+    testRuntime 'org.junit.jupiter:junit-jupiter-engine:5.2.0'
 }
 compileKotlin {
     kotlinOptions {
@@ -27,7 +29,7 @@ compileTestKotlin {
 //create a single Jar with all dependencies
 task fatJar(type: Jar) {
     manifest {
-        attributes 'Main-Class': 'bandcampcollectiondownloader.BandcampCollectionDownloaderKt'
+        attributes 'Main-Class': 'bandcampcollectiondownloader.MainKt'
     }
     baseName = project.name
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
