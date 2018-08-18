@@ -138,12 +138,13 @@ fun downloadAll(cookiesFile: Path, bandcampUser: String, downloadFormat: String,
         }
     }
     println("""Found collection page: "${doc.title()}"""")
-    if (!doc.toString().contains("buy-now")) {
-        println("Provided cookies appear to be working!")
-    }
 
     // Get download pages
     val collection = doc.select("span.redownload-item a")
+
+    if (collection.isEmpty()) {
+        throw BandCampDownloaderError("No download links could by found in the collection page. This can be caused by an outdated or invalid cookies file.")
+    }
 
     // For each download page
     for (item in collection) {

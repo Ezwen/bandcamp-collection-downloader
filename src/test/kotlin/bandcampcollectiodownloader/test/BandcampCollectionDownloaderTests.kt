@@ -46,4 +46,11 @@ class BandcampCollectionDownloaderTests {
             downloadAll(Paths.get("./test-data/wellformedcookies.json"), "zerz1e3687dfs3df7", "bli", Paths.get("bli"))
         }
     }
+
+    @Test
+    fun testErrorCookiesUselessForBandcampUser() {
+        assertThrows<BandCampDownloaderError> {
+            downloadAll(Paths.get("./test-data/wellformedcookies.json"), "bli", "bli", Paths.get("bli"))
+        }
+    }
 }
