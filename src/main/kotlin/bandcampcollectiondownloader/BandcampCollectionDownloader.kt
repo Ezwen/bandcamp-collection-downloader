@@ -1,6 +1,7 @@
 package bandcampcollectiondownloader
 
 import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
 import com.google.gson.annotations.SerializedName
 import org.jsoup.Jsoup
 import org.zeroturnaround.zip.ZipUtil
@@ -42,6 +43,12 @@ data class ParsedStatDownload(
 fun parsedCookiesToMap(parsedCookies: Array<ParsedCookie>): Map<String, String> {
     val result = HashMap<String, String>()
     for (parsedCookie in parsedCookies) {
+        if (parsedCookie.contentRaw == null) {
+            throw BandCampDownloaderError("Missing 'Content raw' field in cookie number ${parsedCookies.indexOf(parsedCookie) + 1}.")
+        }
+        if (parsedCookie.nameRaw == null) {
+            throw BandCampDownloaderError("Missing 'Name raw' field in cookie number ${parsedCookies.indexOf(parsedCookie) + 1}.")
+        }
         result.put(parsedCookie.nameRaw, parsedCookie.contentRaw)
     }
     return result
@@ -109,7 +116,12 @@ fun downloadAll(cookiesFile: Path, bandcampUser: String, downloadFormat: String,
         throw BandCampDownloaderError("Cookies file '$cookiesFile' cannot be found.")
     }
     val jsonData = String(Files.readAllBytes(cookiesFile))
-    val parsedCookies = gson.fromJson(jsonData, Array<ParsedCookie>::class.java)
+    val parsedCookies =
+            try {
+                gson.fromJson(jsonData, Array<ParsedCookie>::class.java)
+            } catch (e: JsonSyntaxException) {
+                throw BandCampDownloaderError("Cookies file '$cookiesFile' is not well formed: ${e.message}")
+            }
     val cookies = parsedCookiesToMap(parsedCookies)
 
     // Get collection page with cookies, hence with download links
