@@ -43,7 +43,7 @@ fun main(args: Array<String>) {
             }
 
             // If the wrong arguments are given, show help + error message
-            catch (e: CommandLine.MissingParameterException) {
+            catch (e: CommandLine.ParameterException) {
                 CommandLine.usage(Args(), System.out)
                 System.err.println(e.message)
                 return
