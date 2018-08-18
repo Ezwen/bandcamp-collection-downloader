@@ -3,6 +3,7 @@ package bandcampcollectiondownloader
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.google.gson.annotations.SerializedName
+import org.jsoup.HttpStatusException
 import org.jsoup.Jsoup
 import org.zeroturnaround.zip.ZipUtil
 import java.io.FileOutputStream
@@ -125,9 +126,17 @@ fun downloadAll(cookiesFile: Path, bandcampUser: String, downloadFormat: String,
     val cookies = parsedCookiesToMap(parsedCookies)
 
     // Get collection page with cookies, hence with download links
-    val doc = Jsoup.connect("https://bandcamp.com/$bandcampUser")
-            .cookies(cookies)
-            .get()
+    val doc = try {
+        Jsoup.connect("https://bandcamp.com/$bandcampUser")
+                .cookies(cookies)
+                .get()
+    } catch (e: HttpStatusException) {
+        if (e.statusCode == 404) {
+            throw BandCampDownloaderError("The bandcamp user '$bandcampUser' does not exist.")
+        } else {
+            throw Exception("TODO")
+        }
+    }
     println("""Found collection page: "${doc.title()}"""")
     if (!doc.toString().contains("buy-now")) {
         println("Provided cookies appear to be working!")
