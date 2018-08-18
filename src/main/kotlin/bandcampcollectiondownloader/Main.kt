@@ -14,7 +14,7 @@ data class Args(
                 description = arrayOf("A JSON file with valid bandcamp credential cookies.",
                         """"Cookie Quick Manager" can be used to obtain this file after logging into bandcamp.""",
                         "(visit https://addons.mozilla.org/en-US/firefox/addon/cookie-quick-manager/)."))
-        var pathToCookiesFile: String? = null,
+        var pathToCookiesFile: Path? = null,
 
         @CommandLine.Option(names = arrayOf("--audio-format", "-f"), required = false,
                 description = arrayOf("The chosen audio format of the files to download (default: \${DEFAULT-VALUE}).",
@@ -40,19 +40,32 @@ fun main(args: Array<String>) {
     val parsedArgs: Args =
             try {
                 CommandLine.populateCommand<Args>(Args(), *args)
-            } catch (e: CommandLine.MissingParameterException) {
+            }
+
+            // If the wrong arguments are given, show help + error message
+            catch (e: CommandLine.MissingParameterException) {
                 CommandLine.usage(Args(), System.out)
                 System.err.println(e.message)
                 return
             }
+
+    // If --help, then only show help and quit
     if (parsedArgs.help) {
         CommandLine.usage(Args(), System.out)
-    } else {
+    }
+
+    // Else, parse arguments and run
+    else {
         val bandcampUser = parsedArgs.bandcampUser
         val cookiesFile = parsedArgs.pathToCookiesFile!!
         val downloadFormat = parsedArgs.audioFormat
         val downloadFolder = parsedArgs.pathToDownloadFolder
-        downloadAll(cookiesFile, bandcampUser, downloadFormat, downloadFolder)
+        try {
+            downloadAll(cookiesFile, bandcampUser, downloadFormat, downloadFolder)
+        } catch (e : BandCampDownloaderError) {
+            System.err.println("ERROR: ${e.message}")
+        }
+
     }
 
 }

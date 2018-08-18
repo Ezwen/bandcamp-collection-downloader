@@ -102,10 +102,13 @@ fun downloadFile(fileURL: String, saveDir: Path, optionalFileName: String = ""):
 /**
  * Core function called from the main
  */
-fun downloadAll(cookiesFile: String, bandcampUser: String, downloadFormat: String, downloadFolder: Path) {
+fun downloadAll(cookiesFile: Path, bandcampUser: String, downloadFormat: String, downloadFolder: Path) {
     // Parse JSON cookies (obtained with "Cookie Quick Manager" Firefox addon)
     val gson = Gson()
-    val jsonData = String(Files.readAllBytes(Paths.get(cookiesFile)))
+    if (!Files.exists(cookiesFile)) {
+        throw BandCampDownloaderError("Cookies file '$cookiesFile' cannot be found.")
+    }
+    val jsonData = String(Files.readAllBytes(cookiesFile))
     val parsedCookies = gson.fromJson(jsonData, Array<ParsedCookie>::class.java)
     val cookies = parsedCookiesToMap(parsedCookies)
 
@@ -144,6 +147,10 @@ fun downloadAll(cookiesFile: String, bandcampUser: String, downloadFormat: Strin
         downloadAlbum(artistFolderPath, albumFolderPath, albumtitle, url, cookies, gson, isSingleTrack, artid)
 
     }
+}
+
+class BandCampDownloaderError : Exception {
+    constructor(s: String) : super(s)
 }
 
 fun downloadAlbum(artistFolderPath: Path?, albumFolderPath: Path, albumtitle: String, url: String, cookies: Map<String, String>, gson: Gson, isSingleTrack: Boolean, artid: String) {
