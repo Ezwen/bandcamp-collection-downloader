@@ -53,4 +53,5 @@ class BandcampCollectionDownloaderTests {
             downloadAll(Paths.get("./test-data/wellformedcookies.json"), "bli", "bli", Paths.get("bli"))
         }
     }
+
 }

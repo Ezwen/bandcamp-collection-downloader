@@ -134,7 +134,7 @@ fun downloadAll(cookiesFile: Path, bandcampUser: String, downloadFormat: String,
         if (e.statusCode == 404) {
             throw BandCampDownloaderError("The bandcamp user '$bandcampUser' does not exist.")
         } else {
-            throw Exception("TODO")
+            throw e
         }
     }
     println("""Found collection page: "${doc.title()}"""")
