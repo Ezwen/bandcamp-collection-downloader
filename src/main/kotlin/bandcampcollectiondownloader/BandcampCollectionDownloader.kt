@@ -17,10 +17,10 @@ import javax.mail.internet.ContentDisposition
 
 data class ParsedCookie(
         @SerializedName("Name raw")
-        val nameRaw: String,
+        val nameRaw: String?,
 
         @SerializedName("Content raw")
-        val contentRaw: String
+        val contentRaw: String?
 )
 
 data class ParsedBandcampData(
@@ -43,13 +43,13 @@ data class ParsedStatDownload(
 fun parsedCookiesToMap(parsedCookies: Array<ParsedCookie>): Map<String, String> {
     val result = HashMap<String, String>()
     for (parsedCookie in parsedCookies) {
-        if (parsedCookie.contentRaw == null) {
+        if (parsedCookie.contentRaw.isNullOrEmpty()) {
             throw BandCampDownloaderError("Missing 'Content raw' field in cookie number ${parsedCookies.indexOf(parsedCookie) + 1}.")
         }
-        if (parsedCookie.nameRaw == null) {
+        if (parsedCookie.nameRaw.isNullOrEmpty()) {
             throw BandCampDownloaderError("Missing 'Name raw' field in cookie number ${parsedCookies.indexOf(parsedCookie) + 1}.")
         }
-        result.put(parsedCookie.nameRaw, parsedCookie.contentRaw)
+        result.put(parsedCookie.nameRaw!!, parsedCookie.contentRaw!!)
     }
     return result
 }
