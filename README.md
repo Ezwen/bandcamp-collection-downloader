@@ -4,20 +4,21 @@ A command-line tool written in Kotlin to automatically download all albums of a 
 
 
 ```
-Usage: <main class> [-h] -c=<pathToCookiesFile> [-d=<pathToDownloadFolder>] [-f=<audioFormat>] <bandcampUser>
+Usage: <main class> [-h] [-c=<pathToCookiesFile>] [-d=<pathToDownloadFolder>] [-f=<audioFormat>] <bandcampUser>
       <bandcampUser>   The bandcamp user account from which all albums must be downloaded.
   -c, --cookies-file=<pathToCookiesFile>
                        A JSON file with valid bandcamp credential cookies.
                        "Cookie Quick Manager" can be used to obtain this file after logging into bandcamp.
                        (visit https://addons.mozilla.org/en-US/firefox/addon/cookie-quick-manager/).
+                       If no cookies file is provided, cookies from the local Firefox installation are used (Linux only).
   -d, --download-folder=<pathToDownloadFolder>
                        The folder in which downloaded albums must be extracted.
                        The following structure is considered: <pathToDownloadFolder>/<artist>/<year> - <album>.
+                       (default: current folder)
   -f, --audio-format=<audioFormat>
                        The chosen audio format of the files to download (default: vorbis).
                        Possible values: flac, wav, aac-hi, mp3-320, aiff-lossless, vorbis, mp3-v0, alac.
   -h, --help           Display this help message.
-
 ```  
 
 ## Bandcamp authentication 
