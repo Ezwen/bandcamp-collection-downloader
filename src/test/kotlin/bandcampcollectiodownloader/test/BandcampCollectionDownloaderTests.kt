@@ -5,6 +5,7 @@ import bandcampcollectiondownloader.downloadAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.nio.file.Paths
+import java.util.*
 
 /**
  * Note: bli is a valid bandcamp user (completely randomly chosen),
@@ -53,5 +54,30 @@ class BandcampCollectionDownloaderTests {
             downloadAll(Paths.get("./test-data/wellformedcookies.json"), "bli", "bli", Paths.get("bli"))
         }
     }
+
+    @Test
+    fun testErrorNoCookiesAtAll() {
+        addToEnv("HOME", "NOPE")
+        assertThrows<BandCampDownloaderError> {
+            downloadAll(null, "bli", "bli", Paths.get("bli"))
+        }
+    }
+
+
+    @Throws(Exception::class)
+    fun addToEnv(key: String, value: String) {
+        val classes = Collections::class.java!!.declaredClasses
+        val env = System.getenv()
+        for (cl in classes) {
+            if ("java.util.Collections\$UnmodifiableMap" == cl.name) {
+                val field = cl.getDeclaredField("m")
+                field.isAccessible = true
+                val obj = field.get(env)
+                val map = obj as MutableMap<String, String>
+                map[key] = value
+            }
+        }
+    }
+
 
 }

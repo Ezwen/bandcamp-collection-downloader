@@ -10,7 +10,7 @@ data class Args(
                 description = arrayOf("The bandcamp user account from which all albums must be downloaded."))
         var bandcampUser: String = "",
 
-        @CommandLine.Option(names = arrayOf("--cookies-file", "-c"), required = true,
+        @CommandLine.Option(names = arrayOf("--cookies-file", "-c"), required = false,
                 description = arrayOf("A JSON file with valid bandcamp credential cookies.",
                         """"Cookie Quick Manager" can be used to obtain this file after logging into bandcamp.""",
                         "(visit https://addons.mozilla.org/en-US/firefox/addon/cookie-quick-manager/)."))
@@ -57,7 +57,7 @@ fun main(args: Array<String>) {
     // Else, parse arguments and run
     else {
         val bandcampUser = parsedArgs.bandcampUser
-        val cookiesFile = parsedArgs.pathToCookiesFile!!
+        val cookiesFile = parsedArgs.pathToCookiesFile
         val downloadFormat = parsedArgs.audioFormat
         val downloadFolder = parsedArgs.pathToDownloadFolder
         try {

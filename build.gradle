@@ -12,6 +12,8 @@ dependencies {
     compile 'com.sun.mail:javax.mail:1.6.1'
     compile 'info.picocli:picocli:3.4.0'
     compile 'com.google.code.gson:gson:2.8.5'
+    compile 'org.ini4j:ini4j:0.5.4'
+    compile 'org.xerial:sqlite-jdbc:3.25.2'
     testCompile 'org.junit.jupiter:junit-jupiter-api:5.2.0'
     testRuntime 'org.junit.jupiter:junit-jupiter-engine:5.2.0'
 }
