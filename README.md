@@ -65,4 +65,6 @@ The resulting binary can then be found in `build/libs/bandcamp-collection-downlo
  - [jsoup](https://jsoup.org/) to get and parse HTML,
  - [zt-zip](https://github.com/zeroturnaround/zt-zip) to unzip downloaded albums,
  - [picocli](https://picocli.info/) to provide a fancy CLI,
- - [Gson](https://github.com/google/gson) to parse JSON.
+ - [Gson](https://github.com/google/gson) to parse JSON files,
+ - [[ini4j]](http://ini4j.sourceforge.net/) to parse INI files,
+ - [sqlite-jdbc](https://github.com/xerial/sqlite-jdbc) to read SQLite files.
