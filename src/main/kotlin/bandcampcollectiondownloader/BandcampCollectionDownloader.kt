@@ -116,6 +116,12 @@ fun isUnix(): Boolean {
     return os.indexOf("nix") >= 0 || os.indexOf("nux") >= 0 || os.indexOf("aix") > 0
 }
 
+fun isWindows(): Boolean {
+    val os = System.getProperty("os.name").toLowerCase()
+    return os.indexOf("win") >= 0
+}
+
+
 /**
  * Core function called from the main
  */
@@ -123,18 +129,14 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
     val gson = Gson()
     val cookies =
 
-            when {
-                cookiesFile != null -> {
-                    // Parse JSON cookies (obtained with "Cookie Quick Manager" Firefox addon)
-                    println("Loading provided cookies file: $cookiesFile")
-                    retrieveCookiesFromFile(cookiesFile, gson)
-                }
-                isUnix() -> {
-                    // Try to find cookies stored in default firefox profile
-                    println("No provided cookies file, using Firefox cookies.")
-                    retrieveFirefoxCookies()
-                }
-                else -> throw BandCampDownloaderError("No available cookies!")
+            if (cookiesFile != null) {
+                // Parse JSON cookies (obtained with "Cookie Quick Manager" Firefox addon)
+                println("Loading provided cookies file: $cookiesFile")
+                retrieveCookiesFromFile(cookiesFile, gson)
+            } else {
+                // Try to find cookies stored in default firefox profile
+                println("No provided cookies file, using Firefox cookies.")
+                retrieveFirefoxCookies()
             }
 
     // Get collection page with cookies, hence with download links
@@ -183,6 +185,7 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
     }
 }
 
+
 private fun retrieveCookiesFromFile(cookiesFile: Path?, gson: Gson): Map<String, String> {
     if (!Files.exists(cookiesFile)) {
         throw BandCampDownloaderError("Cookies file '$cookiesFile' cannot be found.")
@@ -201,10 +204,21 @@ private fun retrieveFirefoxCookies(): HashMap<String, String> {
     val result = HashMap<String, String>()
 
     // Find cookies file path
-    val homeDir = System.getenv()["HOME"]
-    val firefoxConfDirPath = "$homeDir/.mozilla/firefox"
-    val profilesListPath = "$firefoxConfDirPath/profiles.ini"
-    val profilesListFile = File(profilesListPath)
+
+
+    val firefoxConfDirPath: Path?
+    firefoxConfDirPath = if (isUnix()) {
+        val homeDir = Paths.get(System.getenv()["HOME"])
+        homeDir.resolve(".mozilla/firefox")
+    } else if (isWindows()) {
+        val appdata = Paths.get(System.getenv("APPDATA"))
+        appdata.resolve("mozilla/firefox")
+    } else {
+        throw BandCampDownloaderError("No available cookies or not supported OS!")
+    }
+
+    val profilesListPath = firefoxConfDirPath.resolve("profiles.ini")
+    val profilesListFile = File(profilesListPath.toUri())
     if (!profilesListFile.exists()) {
         throw BandCampDownloaderError("No Firefox profiles.ini file could be found!")
     }
@@ -215,12 +229,12 @@ private fun retrieveFirefoxCookies(): HashMap<String, String> {
                 && ini[it]!!.containsKey(default)
                 && ini[it]!![default] == "1"
     }
-    val defaultProfilePath = firefoxConfDirPath + "/" + ini.get(defaultProfileSection, "Path")
-    val cookiesFilePath = "$defaultProfilePath/cookies.sqlite"
+    val defaultProfilePath = firefoxConfDirPath.resolve(ini.get(defaultProfileSection, "Path"))
+    val cookiesFilePath = defaultProfilePath.resolve("cookies.sqlite")
 
     // Copy cookies file as tmp file
     val tmpFolder = Files.createTempDirectory("bandcampCollectionDownloader")
-    val copiedCookiesPath = Files.copy(Paths.get(cookiesFilePath), tmpFolder.resolve("cookies.json"))
+    val copiedCookiesPath = Files.copy(cookiesFilePath, tmpFolder.resolve("cookies.json"))
     copiedCookiesPath.toFile().deleteOnExit()
 
     // Start reading firefox's  cookies.sqlite
