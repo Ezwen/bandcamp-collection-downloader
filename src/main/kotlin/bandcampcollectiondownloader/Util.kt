@@ -7,6 +7,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import javax.mail.internet.ContentDisposition
 
+const val BUFFER_SIZE = 4096
 
 /**
  * From http://www.codejava.net/java-se/networking/use-httpurlconnection-to-download-file-from-an-http-url

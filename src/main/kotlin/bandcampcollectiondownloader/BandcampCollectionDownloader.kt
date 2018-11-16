@@ -56,7 +56,6 @@ fun parsedCookiesToMap(parsedCookies: Array<ParsedCookie>): Map<String, String> 
     return result
 }
 
-const val BUFFER_SIZE = 4096
 
 /**
  * Core function called from the main
@@ -143,14 +142,16 @@ private fun retrieveFirefoxCookies(): HashMap<String, String> {
 
 
     val firefoxConfDirPath: Path?
-    firefoxConfDirPath = if (isUnix()) {
-        val homeDir = Paths.get(System.getenv()["HOME"])
-        homeDir.resolve(".mozilla/firefox")
-    } else if (isWindows()) {
-        val appdata = Paths.get(System.getenv("APPDATA"))
-        appdata.resolve("mozilla/firefox")
-    } else {
-        throw BandCampDownloaderError("No available cookies or not supported OS!")
+    firefoxConfDirPath = when {
+        isUnix() -> {
+            val homeDir = Paths.get(System.getenv()["HOME"])
+            homeDir.resolve(".mozilla/firefox")
+        }
+        isWindows() -> {
+            val appdata = Paths.get(System.getenv("APPDATA"))
+            appdata.resolve("mozilla/firefox")
+        }
+        else -> throw BandCampDownloaderError("OS not supported, cannot find Firefox cookies!")
     }
 
     val profilesListPath = firefoxConfDirPath.resolve("profiles.ini")
