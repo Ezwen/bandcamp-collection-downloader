@@ -10,7 +10,8 @@ Usage: <main class> [-h] [-c=<pathToCookiesFile>] [-d=<pathToDownloadFolder>] [-
                        A JSON file with valid bandcamp credential cookies.
                        "Cookie Quick Manager" can be used to obtain this file after logging into bandcamp.
                        (visit https://addons.mozilla.org/en-US/firefox/addon/cookie-quick-manager/).
-                       If no cookies file is provided, cookies from the local Firefox installation are used (Linux only).
+                       If no cookies file is provided, cookies from the local Firefox installation are used (Windows and
+                         Linux only).
   -d, --download-folder=<pathToDownloadFolder>
                        The folder in which downloaded albums must be extracted.
                        The following structure is considered: <pathToDownloadFolder>/<artist>/<year> - <album>.
@@ -25,7 +26,7 @@ Usage: <main class> [-h] [-c=<pathToCookiesFile>] [-d=<pathToDownloadFolder>] [-
 
 This tool does not manage authentication with Bandcamp servers, as they require a valid token from Google Captcha.
 Hence, authentication must first be achieved using Firefox. Then there are two possibilities:
-- If running a Linux system (and if the `--cookies-file` parameter is not used), then the tool will automatically find the required cookies in the Firefox profile folder of the system user.
+- If running a Windows or Linux system (and if the `--cookies-file` parameter is not used), then the tool will automatically find the required cookies in the Firefox profile folder of the system user.
 - Else, Bandcamp cookies must be exported in JSON using the Firefox Addon [Cookie Quick Manager](https://addons.mozilla.org/en-US/firefox/addon/cookie-quick-manager/). 
 This JSON file can then be used using the parameter `--cookies-file`:
 

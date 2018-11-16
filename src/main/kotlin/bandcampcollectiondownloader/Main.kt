@@ -14,7 +14,7 @@ data class Args(
                 description = arrayOf("A JSON file with valid bandcamp credential cookies.",
                         """"Cookie Quick Manager" can be used to obtain this file after logging into bandcamp.""",
                         "(visit https://addons.mozilla.org/en-US/firefox/addon/cookie-quick-manager/).",
-                        "If no cookies file is provided, cookies from the local Firefox installation are used (Linux only)."))
+                        "If no cookies file is provided, cookies from the local Firefox installation are used (Windows and Linux only)."))
         var pathToCookiesFile: Path? = null,
 
         @CommandLine.Option(names = arrayOf("--audio-format", "-f"), required = false,
