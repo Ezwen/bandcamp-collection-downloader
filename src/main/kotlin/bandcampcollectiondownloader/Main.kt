@@ -23,7 +23,10 @@ data class Args(
         var pathToDownloadFolder: Path = Paths.get("."),
 
         @CommandLine.Option(names = ["-h", "--help"], usageHelp = true, description = ["Display this help message."])
-        var help: Boolean = false
+        var help: Boolean = false,
+
+        @CommandLine.Option(names = ["-r", "--retries"], usageHelp = false, description = ["Amount of retries when downloading an album."])
+        var retries: Int = 3
 
 )
 
@@ -31,7 +34,7 @@ data class Args(
 fun main(args: Array<String>) {
 
     // Parsing args
-    System.setProperty("picocli.usage.width", "120")
+    System.setProperty("picocli.usage.width", "130")
     val parsedArgs: Args =
             try {
                 CommandLine.populateCommand<Args>(Args(), *args)
@@ -55,8 +58,9 @@ fun main(args: Array<String>) {
         val cookiesFile = parsedArgs.pathToCookiesFile
         val downloadFormat = parsedArgs.audioFormat
         val downloadFolder = parsedArgs.pathToDownloadFolder
+        val retries = parsedArgs.retries
         try {
-            downloadAll(cookiesFile, bandcampUser, downloadFormat, downloadFolder)
+            downloadAll(cookiesFile, bandcampUser, downloadFormat, downloadFolder, retries)
         } catch (e: BandCampDownloaderError) {
             System.err.println("ERROR: ${e.message}")
         }

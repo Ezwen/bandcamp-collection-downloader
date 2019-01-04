@@ -31,11 +31,10 @@ data class ParsedStatDownload(
 )
 
 
-
 /**
  * Core function called from the main
  */
-fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String, downloadFolder: Path) {
+fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String, downloadFolder: Path, retries: Int) {
     val gson = Gson()
     val cookies =
 
@@ -87,8 +86,8 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
 
         // If windows, replace colons in file names by a unicode char that looks like a colon
         if (isWindows()) {
-            albumtitle = albumtitle.replace(':','꞉')
-            artist = artist.replace(':','꞉')
+            albumtitle = albumtitle.replace(':', '꞉')
+            artist = artist.replace(':', '꞉')
         }
 
         // Prepare artist and album folder
@@ -96,11 +95,23 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
         val artistFolderPath = Paths.get("$downloadFolder").resolve(artist)
         val albumFolderPath = artistFolderPath.resolve(albumFolderName)
 
-        downloadAlbum(artistFolderPath, albumFolderPath, albumtitle, url, cookies, gson, isSingleTrack, artid)
-
+        // Download album, with as many retries as configured
+        val attempts = retries + 1
+        for (i in 1..attempts) {
+            if (i > 1) {
+                println("Retrying download (${i - 1}/$retries).")
+            }
+            try {
+                downloadAlbum(artistFolderPath, albumFolderPath, albumtitle, url, cookies, gson, isSingleTrack, artid)
+            } catch (e: Throwable) {
+                println("""Error while downloading: "${e.javaClass.name}: ${e.message}".""")
+                if (i == attempts) {
+                    throw BandCampDownloaderError("Could not download album after $retries retries.")
+                }
+            }
+        }
     }
 }
-
 
 
 class BandCampDownloaderError(s: String) : Exception(s)
