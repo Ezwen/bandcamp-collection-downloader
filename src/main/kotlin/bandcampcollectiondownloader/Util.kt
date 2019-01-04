@@ -5,7 +5,9 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.text.DecimalFormat
 import javax.mail.internet.ContentDisposition
+
 
 const val BUFFER_SIZE = 4096
 
@@ -31,6 +33,7 @@ fun downloadFile(fileURL: String, saveDir: Path, optionalFileName: String = ""):
                     }
                     else -> Paths.get(url.file).fileName.toString()
                 }
+        val fileSize: Int = httpConn.getHeaderField("Content-Length").toInt()
 
         // opens input stream from the HTTP connection
         val inputStream = httpConn.inputStream
@@ -42,11 +45,17 @@ fun downloadFile(fileURL: String, saveDir: Path, optionalFileName: String = ""):
 
         val buffer = ByteArray(BUFFER_SIZE)
         var bytesRead = inputStream.read(buffer)
+        var total = 0
         while (bytesRead != -1) {
+            val percent = total.toDouble() / fileSize.toDouble() * 100
+            val formatter = DecimalFormat("#0.00")
+            val percentString = formatter.format(percent)
+            System.out.print("Progress: $percentString % ($total / $fileSize) \r")
             outputStream.write(buffer, 0, bytesRead)
             bytesRead = inputStream.read(buffer)
+            total += bytesRead
         }
-
+        System.out.print(" ".repeat(120) + "\r")
         outputStream.close()
         inputStream.close()
         httpConn.disconnect()
