@@ -68,3 +68,10 @@ fun isWindows(): Boolean {
     return os.indexOf("win") >= 0
 }
 
+fun replaceInvalidCharsByUnicode(s: String): String {
+    var result: String = s
+    result = result.replace(':', '꞉')
+    result = result.replace('/', '／')
+    result = result.replace('\\', '⧹')
+    return result
+}

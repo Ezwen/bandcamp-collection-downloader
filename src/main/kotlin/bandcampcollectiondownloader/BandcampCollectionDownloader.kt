@@ -84,11 +84,9 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
         val url = digitalItem.downloads[downloadFormat]?.get("url").orEmpty()
         val artid = digitalItem.art_id
 
-        // If windows, replace colons in file names by a unicode char that looks like a colon
-        if (isWindows()) {
-            albumtitle = albumtitle.replace(':', '꞉')
-            artist = artist.replace(':', '꞉')
-        }
+        // Replace invalid chars by similar unicode chars
+        albumtitle = replaceInvalidCharsByUnicode(albumtitle)
+        artist = replaceInvalidCharsByUnicode(artist)
 
         // Prepare artist and album folder
         val albumFolderName = "$releaseYear - $albumtitle"
