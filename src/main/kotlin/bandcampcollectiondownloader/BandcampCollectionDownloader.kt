@@ -77,13 +77,19 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
 
         // Extract data from blob
         val digitalItem = downloadPageJsonParsed.digital_items[0]
-        val albumtitle = digitalItem.title
-        val artist = digitalItem.artist
+        var albumtitle = digitalItem.title
+        var artist = digitalItem.artist
         val releaseDate = digitalItem.package_release_date
         val releaseYear = releaseDate.subSequence(7, 11)
         val isSingleTrack: Boolean = digitalItem.download_type == "t"
         val url = digitalItem.downloads[downloadFormat]?.get("url").orEmpty()
         val artid = digitalItem.art_id
+
+        // If windows, replace colons in file names by a unicode char that looks like a colon
+        if (isWindows()) {
+            albumtitle = albumtitle.replace(':','꞉')
+            artist = artist.replace(':','꞉')
+        }
 
         // Prepare artist and album folder
         val albumFolderName = "$releaseYear - $albumtitle"
