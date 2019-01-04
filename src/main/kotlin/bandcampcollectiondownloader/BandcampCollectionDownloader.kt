@@ -102,12 +102,12 @@ class BandCampDownloaderError(s: String) : Exception(s)
 fun downloadAlbum(artistFolderPath: Path?, albumFolderPath: Path, albumtitle: String, url: String, cookies: Map<String, String>, gson: Gson, isSingleTrack: Boolean, artid: String) {
     // If the artist folder does not exist, we create it
     if (!Files.exists(artistFolderPath)) {
-        Files.createDirectory(artistFolderPath)
+        Files.createDirectories(artistFolderPath)
     }
 
     // If the album folder does not exist, we create it
     if (!Files.exists(albumFolderPath)) {
-        Files.createDirectory(albumFolderPath)
+        Files.createDirectories(albumFolderPath)
     }
 
     // If the folder is empty, or if it only contains the zip.part file, we proceed
