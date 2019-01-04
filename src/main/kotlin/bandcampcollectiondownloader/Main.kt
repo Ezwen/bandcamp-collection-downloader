@@ -26,7 +26,10 @@ data class Args(
         var help: Boolean = false,
 
         @CommandLine.Option(names = ["-r", "--retries"], usageHelp = false, description = ["Amount of retries when downloading an album."])
-        var retries: Int = 3
+        var retries: Int = 3,
+
+        @CommandLine.Option(names = ["-t", "--timeout"], usageHelp = false, description = ["Timeout in ms before giving up an HTTP connection."])
+        var timeout: Int = 5000
 
 )
 
@@ -59,8 +62,9 @@ fun main(args: Array<String>) {
         val downloadFormat = parsedArgs.audioFormat
         val downloadFolder = parsedArgs.pathToDownloadFolder
         val retries = parsedArgs.retries
+        val timeout = parsedArgs.timeout
         try {
-            downloadAll(cookiesFile, bandcampUser, downloadFormat, downloadFolder, retries)
+            downloadAll(cookiesFile, bandcampUser, downloadFormat, downloadFolder, retries, timeout)
         } catch (e: BandCampDownloaderError) {
             System.err.println("ERROR: ${e.message}")
         }

@@ -6,6 +6,7 @@ import org.jsoup.Jsoup
 import org.zeroturnaround.zip.ZipUtil
 import retrieveCookiesFromFile
 import retrieveFirefoxCookies
+import java.lang.Thread.sleep
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -34,7 +35,7 @@ data class ParsedStatDownload(
 /**
  * Core function called from the main
  */
-fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String, downloadFolder: Path, retries: Int) {
+fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String, downloadFolder: Path, retries: Int, timeout: Int) {
     val gson = Gson()
     val cookies =
 
@@ -51,6 +52,7 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
     // Get collection page with cookies, hence with download links
     val doc = try {
         Jsoup.connect("https://bandcamp.com/$bandcampUser")
+                .timeout(timeout)
                 .cookies(cookies)
                 .get()
     } catch (e: HttpStatusException) {
@@ -72,7 +74,7 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
     // For each download page
     for (item in collection) {
         val downloadPageURL = item.attr("href")
-        val downloadPageJsonParsed = getDataBlobFromDownloadPage(downloadPageURL, cookies, gson)
+        val downloadPageJsonParsed = getDataBlobFromDownloadPage(downloadPageURL, cookies, gson, timeout)
 
         // Extract data from blob
         val digitalItem = downloadPageJsonParsed.digital_items[0]
@@ -98,9 +100,10 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
         for (i in 1..attempts) {
             if (i > 1) {
                 println("Retrying download (${i - 1}/$retries).")
+                sleep(1000)
             }
             try {
-                downloadAlbum(artistFolderPath, albumFolderPath, albumtitle, url, cookies, gson, isSingleTrack, artid)
+                downloadAlbum(artistFolderPath, albumFolderPath, albumtitle, url, cookies, gson, isSingleTrack, artid, timeout)
                 break
             } catch (e: Throwable) {
                 println("""Error while downloading: "${e.javaClass.name}: ${e.message}".""")
@@ -115,7 +118,7 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
 
 class BandCampDownloaderError(s: String) : Exception(s)
 
-fun downloadAlbum(artistFolderPath: Path?, albumFolderPath: Path, albumtitle: String, url: String, cookies: Map<String, String>, gson: Gson, isSingleTrack: Boolean, artid: String) {
+fun downloadAlbum(artistFolderPath: Path?, albumFolderPath: Path, albumtitle: String, url: String, cookies: Map<String, String>, gson: Gson, isSingleTrack: Boolean, artid: String, timeout: Int) {
     // If the artist folder does not exist, we create it
     if (!Files.exists(artistFolderPath)) {
         Files.createDirectories(artistFolderPath)
@@ -130,7 +133,7 @@ fun downloadAlbum(artistFolderPath: Path?, albumFolderPath: Path, albumtitle: St
     val amountFiles = albumFolderPath.toFile().listFiles().size
     if (amountFiles < 2) {
 
-        val outputFilePath: Path = prepareDownload(albumtitle, url, cookies, gson, albumFolderPath)
+        val outputFilePath: Path = prepareDownload(albumtitle, url, cookies, gson, albumFolderPath, timeout)
 
         // If this is a zip, we unzip
         if (!isSingleTrack) {
@@ -148,7 +151,7 @@ fun downloadAlbum(artistFolderPath: Path?, albumFolderPath: Path, albumtitle: St
         else {
             val coverURL = "https://f4.bcbits.com/img/a${artid}_10"
             println("Downloading cover ($coverURL)...")
-            downloadFile(coverURL, albumFolderPath, "cover.jpg")
+            downloadFile(coverURL, albumFolderPath, "cover.jpg", timeout)
         }
 
         println("done.")
@@ -158,20 +161,20 @@ fun downloadAlbum(artistFolderPath: Path?, albumFolderPath: Path, albumtitle: St
     }
 }
 
-fun getDataBlobFromDownloadPage(downloadPageURL: String?, cookies: Map<String, String>, gson: Gson): ParsedBandcampData {
+fun getDataBlobFromDownloadPage(downloadPageURL: String?, cookies: Map<String, String>, gson: Gson, timeout: Int): ParsedBandcampData {
     println("Analyzing download page $downloadPageURL")
 
     // Get page content
     val downloadPage = Jsoup.connect(downloadPageURL)
             .cookies(cookies)
-            .timeout(100000).get()
+            .timeout(timeout).get()
 
     // Get data blob
     val downloadPageJson = downloadPage.select("#pagedata").attr("data-blob")
     return gson.fromJson(downloadPageJson, ParsedBandcampData::class.java)
 }
 
-fun prepareDownload(albumtitle: String, url: String, cookies: Map<String, String>, gson: Gson, albumFolderPath: Path): Path {
+fun prepareDownload(albumtitle: String, url: String, cookies: Map<String, String>, gson: Gson, albumFolderPath: Path, timeout: Int): Path {
     println("Preparing download of $albumtitle ($url)...")
 
     val random = Random()
@@ -185,7 +188,7 @@ fun prepareDownload(albumtitle: String, url: String, cookies: Map<String, String
     println("Getting download link ($statdownloadURL)")
     val statedownloadUglyBody: String = Jsoup.connect(statdownloadURL)
             .cookies(cookies)
-            .timeout(100000)
+            .timeout(timeout)
             .get().body().select("body")[0].text().toString()
 
     val prefixPattern = Pattern.compile("""if\s*\(\s*window\.Downloads\s*\)\s*\{\s*Downloads\.statResult\s*\(\s*""")
@@ -203,5 +206,5 @@ fun prepareDownload(albumtitle: String, url: String, cookies: Map<String, String
     println("Downloading $albumtitle ($realDownloadURL)")
 
     // Download content
-    return downloadFile(realDownloadURL, albumFolderPath)
+    return downloadFile(realDownloadURL, albumFolderPath, timeout = timeout)
 }

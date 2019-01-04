@@ -14,10 +14,12 @@ const val BUFFER_SIZE = 4096
 /**
  * From http://www.codejava.net/java-se/networking/use-httpurlconnection-to-download-file-from-an-http-url
  */
-fun downloadFile(fileURL: String, saveDir: Path, optionalFileName: String = ""): Path {
+fun downloadFile(fileURL: String, saveDir: Path, optionalFileName: String = "", timeout: Int): Path {
 
     val url = URL(fileURL)
     val httpConn = url.openConnection() as HttpURLConnection
+    httpConn.connectTimeout = timeout
+    httpConn.readTimeout = timeout
     val responseCode = httpConn.responseCode
 
     // always check HTTP response code first
@@ -47,10 +49,13 @@ fun downloadFile(fileURL: String, saveDir: Path, optionalFileName: String = ""):
         var bytesRead = inputStream.read(buffer)
         var total = 0
         while (bytesRead != -1) {
+            // Print progress
             val percent = total.toDouble() / fileSize.toDouble() * 100
             val formatter = DecimalFormat("#0.00")
             val percentString = formatter.format(percent)
             System.out.print("Progress: $percentString % ($total / $fileSize) \r")
+
+            // Download chunk
             outputStream.write(buffer, 0, bytesRead)
             bytesRead = inputStream.read(buffer)
             total += bytesRead
