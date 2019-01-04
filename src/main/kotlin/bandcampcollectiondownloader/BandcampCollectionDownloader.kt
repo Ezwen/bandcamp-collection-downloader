@@ -101,6 +101,7 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
             }
             try {
                 downloadAlbum(artistFolderPath, albumFolderPath, albumtitle, url, cookies, gson, isSingleTrack, artid)
+                break
             } catch (e: Throwable) {
                 println("""Error while downloading: "${e.javaClass.name}: ${e.message}".""")
                 if (i == attempts) {
