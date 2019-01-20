@@ -25,10 +25,10 @@ data class Args(
         @CommandLine.Option(names = ["-h", "--help"], usageHelp = true, description = ["Display this help message."])
         var help: Boolean = false,
 
-        @CommandLine.Option(names = ["-r", "--retries"], usageHelp = false, description = ["Amount of retries when downloading an album."])
+        @CommandLine.Option(names = ["-r", "--retries"], usageHelp = false, description = ["Amount of retries when downloading an album (default: 3)."])
         var retries: Int = 3,
 
-        @CommandLine.Option(names = ["-t", "--timeout"], usageHelp = false, description = ["Timeout in ms before giving up an HTTP connection."])
+        @CommandLine.Option(names = ["-t", "--timeout"], usageHelp = false, description = ["Timeout in ms before giving up an HTTP connection (default: 5000)."])
         var timeout: Int = 5000
 
 )
