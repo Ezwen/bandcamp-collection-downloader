@@ -33,11 +33,6 @@ Hence, authentication must first be achieved using Firefox. Then there are two p
 - Else, Bandcamp cookies must be exported in JSON using the Firefox Addon [Cookie Quick Manager](https://addons.mozilla.org/en-US/firefox/addon/cookie-quick-manager/). 
 This JSON file can then be used using the parameter `--cookies-file`:
 
-## Installation
-
-After each commit, the continuous integration (CI) builds a new standalone (ie. that includes all dependencies) executable jar that can be used as is.
-The last produced jar can always be found [at this link](https://framagit.org/Gwendal/bandcamp-collection-downloader/-/jobs/artifacts/master/raw/build/libs/bandcamp-collection-downloader.jar?job=build).
-
 ## Usage
 
 Example of command:
