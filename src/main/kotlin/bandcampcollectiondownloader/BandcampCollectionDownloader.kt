@@ -35,7 +35,7 @@ data class ParsedStatDownload(
 /**
  * Core function called from the main
  */
-fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String, downloadFolder: Path, retries: Int, timeout: Int) {
+fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String, downloadFolder: Path, retries: Int, timeout: Int, stopAtFirstExistingAlbum: Boolean) {
     val gson = Gson()
     val cookies =
 
@@ -96,6 +96,7 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
         val albumFolderPath = artistFolderPath.resolve(albumFolderName)
 
         // Download album, with as many retries as configured
+        var downloaded = false
         val attempts = retries + 1
         for (i in 1..attempts) {
             if (i > 1) {
@@ -103,7 +104,7 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
                 sleep(1000)
             }
             try {
-                downloadAlbum(artistFolderPath, albumFolderPath, albumtitle, url, cookies, gson, isSingleTrack, artid, timeout)
+                downloaded = downloadAlbum(artistFolderPath, albumFolderPath, albumtitle, url, cookies, gson, isSingleTrack, artid, timeout)
                 break
             } catch (e: Throwable) {
                 println("""Error while downloading: "${e.javaClass.name}: ${e.message}".""")
@@ -112,13 +113,18 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
                 }
             }
         }
+
+        if (!downloaded && stopAtFirstExistingAlbum) {
+            println("Stopping the process since one album pre-exists in the download folder.")
+            break
+        }
     }
 }
 
 
 class BandCampDownloaderError(s: String) : Exception(s)
 
-fun downloadAlbum(artistFolderPath: Path?, albumFolderPath: Path, albumtitle: String, url: String, cookies: Map<String, String>, gson: Gson, isSingleTrack: Boolean, artid: String, timeout: Int) {
+fun downloadAlbum(artistFolderPath: Path?, albumFolderPath: Path, albumtitle: String, url: String, cookies: Map<String, String>, gson: Gson, isSingleTrack: Boolean, artid: String, timeout: Int) : Boolean {
     // If the artist folder does not exist, we create it
     if (!Files.exists(artistFolderPath)) {
         Files.createDirectories(artistFolderPath)
@@ -155,9 +161,11 @@ fun downloadAlbum(artistFolderPath: Path?, albumFolderPath: Path, albumtitle: St
         }
 
         println("done.")
+        return true
 
     } else {
         println("Album $albumtitle already done, skipping")
+        return false
     }
 }
 

@@ -29,7 +29,10 @@ data class Args(
         var retries: Int = 3,
 
         @CommandLine.Option(names = ["-t", "--timeout"], usageHelp = false, description = ["Timeout in ms before giving up an HTTP connection (default: 5000)."])
-        var timeout: Int = 5000
+        var timeout: Int = 5000,
+
+        @CommandLine.Option(names = ["-s", "--stop-on-existing-album"], description = ["Stops all downloads as soon as one album pre-exists in the download folder."])
+        var stopOnExistingAlbum: Boolean = false
 
 )
 
@@ -63,8 +66,9 @@ fun main(args: Array<String>) {
         val downloadFolder = parsedArgs.pathToDownloadFolder
         val retries = parsedArgs.retries
         val timeout = parsedArgs.timeout
+        val stopOnExistingAlbum = parsedArgs.stopOnExistingAlbum
         try {
-            downloadAll(cookiesFile, bandcampUser, downloadFormat, downloadFolder, retries, timeout)
+            downloadAll(cookiesFile, bandcampUser, downloadFormat, downloadFolder, retries, timeout, stopOnExistingAlbum)
         } catch (e: BandCampDownloaderError) {
             System.err.println("ERROR: ${e.message}")
         }
