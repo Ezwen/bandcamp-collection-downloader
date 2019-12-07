@@ -3,6 +3,7 @@ package bandcampcollectiondownloader
 import com.google.gson.Gson
 import org.jsoup.HttpStatusException
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
 import org.zeroturnaround.zip.ZipUtil
 import retrieveCookiesFromFile
 import retrieveFirefoxCookies
@@ -13,6 +14,27 @@ import java.nio.file.Paths
 import java.util.*
 import java.util.regex.Pattern
 
+data class ParsedFanpageData(
+        val fan_data: FanData,
+        val collection_data: CollectionData
+)
+
+data class FanData(
+        val fan_id: String
+)
+
+data class CollectionData(
+        val batch_size: Int,
+        val item_count: Int,
+        val last_token: String,
+        val redownload_urls: Map<String, String>
+)
+
+data class ParsedCollectionItems(
+        val more_available: Boolean,
+        val last_token: String,
+        val redownload_urls: Map<String, String>
+)
 
 data class ParsedBandcampData(
         @Suppress("ArrayInDataClass") val digital_items: Array<DigitalItem>
@@ -65,16 +87,52 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
     println("""Found collection page: "${doc.title()}"""")
 
     // Get download pages
-    val collection = doc.select("span.redownload-item a")
+    val fanPageBlob = getDataBlobFromFanPage(doc, gson)
+    val collection = fanPageBlob.collection_data.redownload_urls.toMutableMap()
 
     if (collection.isEmpty()) {
         throw BandCampDownloaderError("No download links could by found in the collection page. This can be caused by an outdated or invalid cookies file.")
     }
 
+    // Get the rest of the collection
+    if (fanPageBlob.collection_data.item_count > fanPageBlob.collection_data.batch_size) {
+        val fanId = fanPageBlob.fan_data.fan_id
+        var lastToken = fanPageBlob.collection_data.last_token
+        var moreAvailable = true
+        while (moreAvailable) {
+            // Append download pages from this api endpoint as well
+            println("Requesting collection_items API older than token $lastToken")
+            val theRest = try {
+                Jsoup.connect("https://bandcamp.com/api/fancollection/1/collection_items")
+                        .ignoreContentType(true)
+                        .timeout(timeout)
+                        .cookies(cookies)
+                        .requestBody("{\"fan_id\": $fanId, \"older_than_token\": \"$lastToken\"}")
+                        .post()
+            } catch (e: HttpStatusException) {
+                throw e
+            }
+
+            val parsedCollectionData = gson.fromJson(theRest.wholeText(), ParsedCollectionItems::class.java)
+            collection.putAll(parsedCollectionData.redownload_urls)
+
+            lastToken = parsedCollectionData.last_token
+            moreAvailable = parsedCollectionData.more_available
+        }
+    }
+
+    val cacheFile = downloadFolder.resolve("bandcamp-collection-downloader.cache")
+    val cache = loadCache(cacheFile).toMutableList()
+
     // For each download page
-    for (item in collection) {
-        val downloadPageURL = item.attr("href")
-        val downloadPageJsonParsed = getDataBlobFromDownloadPage(downloadPageURL, cookies, gson, timeout)
+    for ((saleItemId, redownloadUrl) in collection) {
+        // less Bandcamp-intensive way of checking already downloaded things
+        if (saleItemId in cache) {
+            println("Sale Item ID $saleItemId is already downloaded; skipping")
+            continue
+        }
+
+        val downloadPageJsonParsed = getDataBlobFromDownloadPage(redownloadUrl, cookies, gson, timeout)
 
         // Extract data from blob
         val digitalItem = downloadPageJsonParsed.digital_items[0]
@@ -105,6 +163,10 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
             }
             try {
                 downloaded = downloadAlbum(artistFolderPath, albumFolderPath, albumtitle, url, cookies, gson, isSingleTrack, artid, timeout)
+                if (saleItemId !in cache) {
+                    cache.add(saleItemId)
+                    addToCache(cacheFile, saleItemId)
+                }
                 break
             } catch (e: Throwable) {
                 println("""Error while downloading: "${e.javaClass.name}: ${e.message}".""")
@@ -123,6 +185,21 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
 
 
 class BandCampDownloaderError(s: String) : Exception(s)
+
+fun loadCache(path: Path) : List<String> {
+    if (!path.toFile().exists()) {
+        return emptyList()
+    }
+
+    return path.toFile().readLines()
+}
+
+fun addToCache(path: Path, line: String) {
+    if (!Files.exists(path)) {
+        Files.createFile(path)
+    }
+    path.toFile().appendText(line + "\n")
+}
 
 fun downloadAlbum(artistFolderPath: Path?, albumFolderPath: Path, albumtitle: String, url: String, cookies: Map<String, String>, gson: Gson, isSingleTrack: Boolean, artid: String, timeout: Int) : Boolean {
     // If the artist folder does not exist, we create it
@@ -167,6 +244,14 @@ fun downloadAlbum(artistFolderPath: Path?, albumFolderPath: Path, albumtitle: St
         println("Album $albumtitle already done, skipping")
         return false
     }
+}
+
+fun getDataBlobFromFanPage(doc: Document, gson: Gson): ParsedFanpageData {
+    println("Analyzing fan page")
+
+    // Get data blob
+    val downloadPageJson = doc.select("#pagedata").attr("data-blob")
+    return gson.fromJson(downloadPageJson, ParsedFanpageData::class.java)
 }
 
 fun getDataBlobFromDownloadPage(downloadPageURL: String?, cookies: Map<String, String>, gson: Gson, timeout: Int): ParsedBandcampData {
