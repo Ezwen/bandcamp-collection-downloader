@@ -11,6 +11,9 @@ import java.lang.Thread.sleep
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.time.Instant
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.regex.Pattern
 
@@ -138,6 +141,14 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
         val digitalItem = downloadPageJsonParsed.digital_items[0]
         var albumtitle = digitalItem.title
         var artist = digitalItem.artist
+
+        // Skip preorders
+        val releaseUTC = ZonedDateTime.parse(digitalItem.package_release_date, DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm:ss zzz")).toInstant()
+        if (releaseUTC > Instant.now()) {
+            println("Sale Item ID $saleItemId ($artist - $albumtitle) is a preorder; skipping")
+            continue
+        }
+
         val releaseDate = digitalItem.package_release_date
         val releaseYear = releaseDate.subSequence(7, 11)
         val isSingleTrack: Boolean = digitalItem.download_type == "t"
