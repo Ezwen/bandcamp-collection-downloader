@@ -35,7 +35,7 @@ data class ParsedStatDownload(
 /**
  * Core function called from the main
  */
-fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String, downloadFolder: Path, retries: Int, timeout: Int, stopAtFirstExistingAlbum: Boolean) {
+fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String, downloadFolder: Path, retries: Int, timeout: Int, stopAtFirstExistingAlbum: Boolean, ignoreFailedAlbums : Boolean) {
     val gson = Gson()
     val cookies =
 
@@ -109,7 +109,11 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
             } catch (e: Throwable) {
                 println("""Error while downloading: "${e.javaClass.name}: ${e.message}".""")
                 if (i == attempts) {
-                    throw BandCampDownloaderError("Could not download album after $retries retries.")
+                    if (ignoreFailedAlbums) {
+                        println("Could not download album after $retries retries.")
+                    } else {
+                        throw BandCampDownloaderError("Could not download album after $retries retries.")
+                    }
                 }
             }
         }

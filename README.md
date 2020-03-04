@@ -23,6 +23,11 @@ Usage: <main class> [-h] [-c=<pathToCookiesFile>] [-d=<pathToDownloadFolder>] [-
   -h, --help                Display this help message.
   -r, --retries=<retries>   Amount of retries when downloading an album.
   -t, --timeout=<timeout>   Timeout in ms before giving up an HTTP connection.
+  -s, --stop-on-existing-album
+                            Stops all downloads as soon as one album pre-exists in the download folder.
+  -e, --skip-failed-albums
+                            Skip albums that fail to download after the specified number of retries. 
+                            Without this flag, an error will be thrown and processing will stop.
 ```
 
 ## Bandcamp authentication 
