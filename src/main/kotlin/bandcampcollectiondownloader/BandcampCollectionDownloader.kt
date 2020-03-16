@@ -35,7 +35,7 @@ data class ParsedStatDownload(
 /**
  * Core function called from the main
  */
-fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String, downloadFolder: Path, retries: Int, timeout: Int, stopAtFirstExistingAlbum: Boolean, ignoreFailedAlbums : Boolean) {
+fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String, downloadFolder: Path, retries: Int, timeout: Int, stopAtFirstExistingAlbum: Boolean, ignoreFailedAlbums: Boolean) {
     val gson = Gson()
     val cookies =
 
@@ -128,7 +128,7 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
 
 class BandCampDownloaderError(s: String) : Exception(s)
 
-fun downloadAlbum(artistFolderPath: Path?, albumFolderPath: Path, albumtitle: String, url: String, cookies: Map<String, String>, gson: Gson, isSingleTrack: Boolean, artid: String, timeout: Int) : Boolean {
+fun downloadAlbum(artistFolderPath: Path?, albumFolderPath: Path, albumtitle: String, url: String, cookies: Map<String, String>, gson: Gson, isSingleTrack: Boolean, artid: String, timeout: Int): Boolean {
     // If the artist folder does not exist, we create it
     if (!Files.exists(artistFolderPath)) {
         Files.createDirectories(artistFolderPath)
