@@ -34,7 +34,7 @@ Usage: <main class> [-h] [-c=<pathToCookiesFile>] [-d=<pathToDownloadFolder>] [-
 
 This tool does not manage authentication with Bandcamp servers, as they require a valid token from Google Captcha.
 Hence, authentication must first be achieved using Firefox. Then there are two possibilities:
-- If running a Windows or Linux system (and if the `--cookies-file` parameter is not used), then the tool will automatically find the required cookies in the Firefox profile folder of the system user.
+- If running a Windows or Linux system (and if the `--cookies-file` parameter is not used), then the tool will automatically find the required cookies in the Firefox profile folder of the system user. **This approach is now incompatible with versions of Firefor prior to 74.0**.
 - Else, Bandcamp cookies must be exported in JSON using the Firefox Addon [Cookie Quick Manager](https://addons.mozilla.org/en-US/firefox/addon/cookie-quick-manager/). 
 This JSON file can then be used using the parameter `--cookies-file`:
 
