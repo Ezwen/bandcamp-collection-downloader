@@ -153,6 +153,9 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
         val releaseYear = releaseDate.subSequence(7, 11)
         val isSingleTrack: Boolean = digitalItem.download_type == "t"
         val url = digitalItem.downloads[downloadFormat]?.get("url").orEmpty()
+        if (url.isEmpty()) {
+            throw BandCampDownloaderError("No URL found (is the download format correct?)")
+        }
         val artid = digitalItem.art_id
 
         // Replace invalid chars by similar unicode chars
