@@ -23,13 +23,18 @@ Usage: <main class> [-h] [-c=<pathToCookiesFile>] [-d=<pathToDownloadFolder>] [-
   -h, --help                Display this help message.
   -r, --retries=<retries>   Amount of retries when downloading an album.
   -t, --timeout=<timeout>   Timeout in ms before giving up an HTTP connection.
+  -s, --stop-on-existing-album
+                            Stops all downloads as soon as one album pre-exists in the download folder.
+  -e, --skip-failed-albums
+                            Skip albums that fail to download after the specified number of retries. 
+                            Without this flag, an error will be thrown and processing will stop.
 ```
 
 ## Bandcamp authentication 
 
 This tool does not manage authentication with Bandcamp servers, as they require a valid token from Google Captcha.
 Hence, authentication must first be achieved using Firefox. Then there are two possibilities:
-- If running a Windows or Linux system (and if the `--cookies-file` parameter is not used), then the tool will automatically find the required cookies in the Firefox profile folder of the system user.
+- If running a Windows or Linux system (and if the `--cookies-file` parameter is not used), then the tool will automatically find the required cookies in the Firefox profile folder of the system user. **This approach is now incompatible with versions of Firefor prior to 74.0**.
 - Else, Bandcamp cookies must be exported in JSON using the Firefox Addon [Cookie Quick Manager](https://addons.mozilla.org/en-US/firefox/addon/cookie-quick-manager/). 
 This JSON file can then be used using the parameter `--cookies-file`:
 

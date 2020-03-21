@@ -97,7 +97,7 @@ fun retrieveFirefoxCookies(): HashMap<String, String> {
         connection = DriverManager.getConnection("jdbc:sqlite:$copiedCookiesPath")
         val statement = connection!!.createStatement()
         statement.queryTimeout = 30  // set timeout to 30 sec.
-        val rs = statement.executeQuery("select * from moz_cookies where baseDomain = 'bandcamp.com'")
+        val rs = statement.executeQuery("select * from moz_cookies where host = '.bandcamp.com'")
         // For each resulting row
         while (rs.next()) {
             // Extract data from row
