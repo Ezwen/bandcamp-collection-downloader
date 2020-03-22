@@ -45,7 +45,7 @@ data class ParsedBandcampData(
 
 data class DigitalItem(
         val downloads: Map<String, Map<String, String>>,
-        val package_release_date: String,
+        val package_release_date: String?,
         val title: String,
         val artist: String,
         val download_type: String,
@@ -142,15 +142,21 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
         var albumtitle = digitalItem.title
         var artist = digitalItem.artist
 
-        // Skip preorders
-        val releaseUTC = ZonedDateTime.parse(digitalItem.package_release_date, DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm:ss zzz")).toInstant()
-        if (releaseUTC > Instant.now()) {
-            println("Sale Item ID $saleItemId ($artist - $albumtitle) is a preorder; skipping")
-            continue
+        // Handle null release dates
+        val releaseDate = digitalItem.package_release_date
+        var releaseYear = "unknown" as CharSequence
+
+        if (releaseDate != null) {
+            releaseYear = releaseDate.subSequence(7, 11)
+
+            // Skip preorders
+            val releaseUTC = ZonedDateTime.parse(releaseDate, DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm:ss zzz")).toInstant()
+            if (releaseUTC > Instant.now()) {
+                println("Sale Item ID $saleItemId ($artist - $albumtitle) is a preorder; skipping")
+                continue
+            }
         }
 
-        val releaseDate = digitalItem.package_release_date
-        val releaseYear = releaseDate.subSequence(7, 11)
         val isSingleTrack: Boolean = digitalItem.download_type == "t"
         val url = digitalItem.downloads[downloadFormat]?.get("url").orEmpty()
         if (url.isEmpty()) {
