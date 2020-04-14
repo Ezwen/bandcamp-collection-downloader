@@ -128,7 +128,7 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
 
 class BandCampDownloaderError(s: String) : Exception(s)
 
-fun downloadAlbum(artistFolderPath: Path?, albumFolderPath: Path, albumtitle: String, url: String, cookies: Map<String, String>, gson: Gson, isSingleTrack: Boolean, artid: String, timeout: Int): Boolean {
+fun downloadAlbum(artistFolderPath: Path, albumFolderPath: Path, albumtitle: String, url: String, cookies: Map<String, String>, gson: Gson, isSingleTrack: Boolean, artid: String, timeout: Int): Boolean {
     // If the artist folder does not exist, we create it
     if (!Files.exists(artistFolderPath)) {
         Files.createDirectories(artistFolderPath)
@@ -140,7 +140,7 @@ fun downloadAlbum(artistFolderPath: Path?, albumFolderPath: Path, albumtitle: St
     }
 
     // If the folder is empty, or if it only contains the zip.part file, we proceed
-    val amountFiles = albumFolderPath.toFile().listFiles().size
+    val amountFiles = albumFolderPath.toFile().listFiles()!!.size
     if (amountFiles < 2) {
 
         val outputFilePath: Path = prepareDownload(albumtitle, url, cookies, gson, albumFolderPath, timeout)
@@ -194,7 +194,7 @@ fun prepareDownload(albumtitle: String, url: String, cookies: Map<String, String
     // Construct statdownload request URL
     val statdownloadURL: String = url
             .replace("/download/", "/statdownload/")
-            .replace("http", "https") + "&.vrs=1" + "&.rand=" + random.nextInt()
+            .replace("http:", "https:") + "&.vrs=1" + "&.rand=" + random.nextInt()
 
     // Get statdownload JSON
     println("Getting download link ($statdownloadURL)")
