@@ -50,6 +50,9 @@ This will download all albums ever bought by the Bandcamp account *myBandcampIde
 and extract the music in the folder `~/Music`, 
 The tool always creates one folder per artist, each containing one folder per album (with the format `<year> - <album name>`).
 
+After downloading the first album, it will create a `bandcamp-collection-downloader.cache` file in the download folder.
+This prevents unnecessarily hitting the Bandcamp servers if you don't use the `--stop-on-existing-album` option.
+
 ## Compiling
 
 Compilation is handled by Gradle.

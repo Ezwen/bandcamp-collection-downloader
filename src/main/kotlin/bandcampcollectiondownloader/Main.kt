@@ -28,7 +28,7 @@ data class Args(
         @CommandLine.Option(names = ["-r", "--retries"], usageHelp = false, description = ["Amount of retries when downloading an album (default: 3)."])
         var retries: Int = 3,
 
-        @CommandLine.Option(names = ["-t", "--timeout"], usageHelp = false, description = ["Timeout in ms before giving up an HTTP connection (default: 5000)."])
+        @CommandLine.Option(names = ["-t", "--timeout"], usageHelp = false, description = ["Timeout in ms before giving up an HTTP connection (default: 50000)."])
         var timeout: Int = 50000,
 
         @CommandLine.Option(names = ["-s", "--stop-on-existing-album"], description = ["Stops all downloads as soon as one album pre-exists in the download folder."])
