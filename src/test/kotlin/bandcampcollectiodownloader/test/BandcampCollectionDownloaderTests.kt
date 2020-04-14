@@ -66,13 +66,14 @@ class BandcampCollectionDownloaderTests {
 
     @Throws(Exception::class)
     fun addToEnv(key: String, value: String) {
-        val classes = Collections::class.java!!.declaredClasses
+        val classes = Collections::class.java.declaredClasses
         val env = System.getenv()
         for (cl in classes) {
             if ("java.util.Collections\$UnmodifiableMap" == cl.name) {
                 val field = cl.getDeclaredField("m")
                 field.isAccessible = true
                 val obj = field.get(env)
+                @Suppress("UNCHECKED_CAST")
                 val map = obj as MutableMap<String, String>
                 map[key] = value
             }
