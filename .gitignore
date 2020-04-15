@@ -7,3 +7,4 @@ out
 .gradle
 .idea
 build
+bin
