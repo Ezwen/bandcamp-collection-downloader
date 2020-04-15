@@ -33,7 +33,7 @@ task fatJar(type: Jar) {
     manifest {
         attributes 'Main-Class': 'bandcampcollectiondownloader.MainKt'
     }
-    baseName = project.name
+    baseName = "bandcamp-collection-downloader"
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
 }
