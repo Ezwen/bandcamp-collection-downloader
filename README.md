@@ -49,7 +49,7 @@ and extract the music in the folder `~/Music`,
 The tool always creates one folder per artist, each containing one folder per album (with the format `<year> - <album name>`).
 
 After downloading the first album, it will create a `bandcamp-collection-downloader.cache` file in the chosen download folder.
-This allows the tool to remembers which albums have already been succesfully downloaded, and thus prevents unnecessarily hitting the Bandcamp servers.
+This allows the tool to remembers which albums have already been successfully downloaded, and thus prevents unnecessarily hitting the Bandcamp servers.
 
 ## Compiling
 
