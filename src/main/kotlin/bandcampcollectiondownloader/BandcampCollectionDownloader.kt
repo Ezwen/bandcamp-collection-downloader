@@ -13,7 +13,6 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Instant
 import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 import java.util.*
 import java.util.regex.Pattern
@@ -61,7 +60,7 @@ data class ParsedStatDownload(
 /**
  * Core function called from the main
  */
-fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String, downloadFolder: Path, retries: Int, timeout: Int, stopAtFirstExistingAlbum: Boolean, ignoreFailedAlbums: Boolean) {
+fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String, downloadFolder: Path, retries: Int, timeout: Int, ignoreFailedAlbums: Boolean) {
     val gson = Gson()
     val cookies =
 
@@ -178,7 +177,6 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
         val albumFolderPath = artistFolderPath.resolve(albumFolderName)
 
         // Download album, with as many retries as configured
-        var downloaded = false
         val attempts = retries + 1
         for (i in 1..attempts) {
             if (i > 1) {
@@ -186,7 +184,7 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
                 sleep(1000)
             }
             try {
-                downloaded = downloadAlbum(artistFolderPath, albumFolderPath, albumtitle, url, cookies, gson, isSingleTrack, artid, timeout)
+                downloadAlbum(artistFolderPath, albumFolderPath, albumtitle, url, cookies, gson, isSingleTrack, artid, timeout)
                 if (saleItemId !in cache) {
                     cache.add(saleItemId)
                     addToCache(cacheFile, saleItemId)
@@ -202,11 +200,6 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
                     }
                 }
             }
-        }
-
-        if (!downloaded && stopAtFirstExistingAlbum) {
-            println("Stopping the process since one album pre-exists in the download folder.")
-            break
         }
     }
 }
