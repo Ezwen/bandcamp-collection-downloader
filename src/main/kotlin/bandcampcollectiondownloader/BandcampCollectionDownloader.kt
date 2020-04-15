@@ -138,6 +138,14 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
 
         val downloadPageJsonParsed = getDataBlobFromDownloadPage(redownloadUrl, cookies, gson, timeout)
 
+        // If null, then the download page is simply invalid and not usable anymore, therefore it can be added to the cache
+        if (downloadPageJsonParsed == null) {
+            println("Sale Item ID $saleItemId cannot be downloaded anymore (maybe a refund?); skipping")
+            cache.add(saleItemId)
+            addToCache(cacheFile, saleItemId)
+            continue
+        }
+
         // Extract data from blob
         val digitalItem = downloadPageJsonParsed.digital_items[0]
         var albumtitle = digitalItem.title
@@ -206,7 +214,7 @@ fun downloadAll(cookiesFile: Path?, bandcampUser: String, downloadFormat: String
 
 class BandCampDownloaderError(s: String) : Exception(s)
 
-fun loadCache(path: Path) : List<String> {
+fun loadCache(path: Path): List<String> {
     if (!path.toFile().exists()) {
         return emptyList()
     }
@@ -274,17 +282,27 @@ fun getDataBlobFromFanPage(doc: Document, gson: Gson): ParsedFanpageData {
     return gson.fromJson(downloadPageJson, ParsedFanpageData::class.java)
 }
 
-fun getDataBlobFromDownloadPage(downloadPageURL: String?, cookies: Map<String, String>, gson: Gson, timeout: Int): ParsedBandcampData {
+fun getDataBlobFromDownloadPage(downloadPageURL: String?, cookies: Map<String, String>, gson: Gson, timeout: Int): ParsedBandcampData? {
     println("Analyzing download page $downloadPageURL")
 
     // Get page content
-    val downloadPage = Jsoup.connect(downloadPageURL)
-            .cookies(cookies)
-            .timeout(timeout).get()
+    try {
+        val downloadPage = Jsoup.connect(downloadPageURL)
+                .cookies(cookies)
+                .timeout(timeout).get()
 
-    // Get data blob
-    val downloadPageJson = downloadPage.select("#pagedata").attr("data-blob")
-    return gson.fromJson(downloadPageJson, ParsedBandcampData::class.java)
+        // Get data blob
+        val downloadPageJson = downloadPage.select("#pagedata").attr("data-blob")
+        return gson.fromJson(downloadPageJson, ParsedBandcampData::class.java)
+
+    } catch (e: HttpStatusException) {
+
+        // If 404, then the download page is not usable anymore for some reason (eg. a refund was given for the purchase)
+        if (e.statusCode == 404)
+            return null
+        else
+            throw e
+    }
 }
 
 fun prepareDownload(albumtitle: String, url: String, cookies: Map<String, String>, gson: Gson, albumFolderPath: Path, timeout: Int): Path {
