@@ -34,23 +34,27 @@ object BandcampCollectionDownloader {
 
         val collection = BandcampAPIHelper.getCollection(cookies, args.timeout, args.bandcampUser)
 
-
-        // For each download page
-        for ((saleItemId, redownloadUrl) in collection) {
-            manageDownloadPage(saleItemId, redownloadUrl, cookies, args)
-        }
-    }
-
-    private fun manageDownloadPage(saleItemId: String, redownloadUrl: String, cookies: Map<String, String>, args: Args) {
+        println("Found a collection of ${collection.size} items.")
 
         val cacheFile = args.pathToDownloadFolder.resolve("bandcamp-collection-downloader.cache")
         val cache = loadCache(cacheFile).toMutableList()
 
-        // less Bandcamp-intensive way of checking already downloaded things
-        if (saleItemId in cache) {
-            println("Sale Item ID $saleItemId is already downloaded; skipping")
-            return
+        val itemsToDownload = collection.filter { (saleItemId, _) -> saleItemId !in cache }
+
+        val alreadyDownloadedItemsCount = collection.size - itemsToDownload.size
+        if (alreadyDownloadedItemsCount > 0) {
+            println("Skipping $alreadyDownloadedItemsCount already downloaded items, based on '${cacheFile.fileName}'.")
         }
+
+        // For each download page
+        for (entry in itemsToDownload) {
+            val itemNumber = itemsToDownload.entries.indexOf(entry) + 1
+            println("Managing item $itemNumber/${itemsToDownload.size}")
+            manageDownloadPage(entry.key, entry.value, cookies, args, cache, cacheFile )
+        }
+    }
+
+    private fun manageDownloadPage(saleItemId: String, redownloadUrl: String, cookies: Map<String, String>, args: Args, cache: MutableList<String>, cacheFile: Path) {
 
         println("Getting data from item page ($redownloadUrl)…")
         val digitalItem = BandcampAPIHelper.getDataBlobFromDownloadPage(redownloadUrl, cookies, args.timeout)

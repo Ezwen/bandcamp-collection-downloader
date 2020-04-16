@@ -115,7 +115,7 @@ object BandcampAPIHelper {
             var moreAvailable = true
             while (moreAvailable) {
                 // Append download pages from this api endpoint as well
-                println("Requesting collection_items API older than token $lastToken")
+                // println("Requesting collection_items API older than token $lastToken")
                 val theRest = try {
                     Jsoup.connect("https://bandcamp.com/api/fancollection/1/collection_items")
                             .ignoreContentType(true)
