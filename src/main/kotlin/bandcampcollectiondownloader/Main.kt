@@ -1,5 +1,6 @@
 package bandcampcollectiondownloader
 
+import BandCampDownloaderError
 import picocli.CommandLine
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -43,7 +44,7 @@ fun main(args: Array<String>) {
     System.setProperty("picocli.usage.width", "130")
     val parsedArgs: Args =
             try {
-                CommandLine.populateCommand<Args>(Args(), *args)
+                CommandLine.populateCommand(Args(), *args)
             }
 
             // If the wrong arguments are given, show help + error message
@@ -68,7 +69,7 @@ fun main(args: Array<String>) {
         val timeout = parsedArgs.timeout
         val ignoreFailedAlbums = parsedArgs.ignoreFailedAlbums
         try {
-            downloadAll(cookiesFile, bandcampUser, downloadFormat, downloadFolder, retries, timeout, ignoreFailedAlbums)
+            BandcampCollectionDownloader.downloadAll(cookiesFile, bandcampUser, downloadFormat, downloadFolder, retries, timeout, ignoreFailedAlbums)
         } catch (e: BandCampDownloaderError) {
             System.err.println("ERROR: ${e.message}")
         }
@@ -76,3 +77,4 @@ fun main(args: Array<String>) {
     }
 
 }
+
