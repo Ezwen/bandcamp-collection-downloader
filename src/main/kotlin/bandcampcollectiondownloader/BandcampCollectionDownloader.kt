@@ -1,7 +1,5 @@
 package bandcampcollectiondownloader
 
-import BandCampDownloaderError
-import com.google.gson.Gson
 import org.zeroturnaround.zip.ZipUtil
 import java.lang.Thread.sleep
 import java.nio.file.Files
@@ -21,30 +19,29 @@ object BandcampCollectionDownloader {
      */
     fun downloadAll(args: Args) {
 
-        val gson = Gson()
 
         val cookies =
 
                 if (args.pathToCookiesFile != null) {
                     // Parse JSON cookies (obtained with "Cookie Quick Manager" Firefox addon)
-                    println("Loading provided cookies file: $args.cookiesFile")
-                    CookiesManagement.retrieveCookiesFromFile(args.pathToCookiesFile!!, gson)
+                    println("Loading provided cookies file: ${args.pathToCookiesFile}")
+                    CookiesManagement.retrieveCookiesFromFile(args.pathToCookiesFile!!)
                 } else {
                     // Try to find cookies stored in default firefox profile
                     println("No provided cookies file, using Firefox cookies.")
                     CookiesManagement.retrieveFirefoxCookies()
                 }
 
-        val collection = BandcampAPIHelper.getCollection(cookies, args.timeout, args.bandcampUser, gson)
+        val collection = BandcampAPIHelper.getCollection(cookies, args.timeout, args.bandcampUser)
 
 
         // For each download page
         for ((saleItemId, redownloadUrl) in collection) {
-            manageDownloadPage(saleItemId, redownloadUrl, cookies, gson, args)
+            manageDownloadPage(saleItemId, redownloadUrl, cookies, args)
         }
     }
 
-    private fun manageDownloadPage(saleItemId: String, redownloadUrl: String, cookies: Map<String, String>, gson: Gson, args: Args) {
+    private fun manageDownloadPage(saleItemId: String, redownloadUrl: String, cookies: Map<String, String>, args: Args) {
 
         val cacheFile = args.pathToDownloadFolder.resolve("bandcamp-collection-downloader.cache")
         val cache = loadCache(cacheFile).toMutableList()
@@ -56,7 +53,7 @@ object BandcampCollectionDownloader {
         }
 
         println("Getting data from item page ($redownloadUrl)…")
-        val digitalItem = BandcampAPIHelper.getDataBlobFromDownloadPage(redownloadUrl, cookies, gson, args.timeout)
+        val digitalItem = BandcampAPIHelper.getDataBlobFromDownloadPage(redownloadUrl, cookies, args.timeout)
 
         // If null, then the download page is simply invalid and not usable anymore, therefore it can be added to the cache
         if (digitalItem == null) {
@@ -105,7 +102,7 @@ object BandcampCollectionDownloader {
                 sleep(1000)
             }
             try {
-                val downloaded = downloadAlbum(artistFolderPath, albumFolderPath, downloadUrl, cookies, gson, isSingleTrack, artid, args.timeout)
+                val downloaded = downloadAlbum(artistFolderPath, albumFolderPath, downloadUrl, cookies, isSingleTrack, artid, args.timeout)
                 if (downloaded) {
                     println("done.")
                 } else {
@@ -130,7 +127,7 @@ object BandcampCollectionDownloader {
     }
 
 
-    private fun downloadAlbum(artistFolderPath: Path, albumFolderPath: Path, downloadUrl: String, cookies: Map<String, String>, gson: Gson, isSingleTrack: Boolean, artid: String, timeout: Int): Boolean {
+    private fun downloadAlbum(artistFolderPath: Path, albumFolderPath: Path, downloadUrl: String, cookies: Map<String, String>, isSingleTrack: Boolean, artid: String, timeout: Int): Boolean {
         // If the artist folder does not exist, we create it
         if (!Files.exists(artistFolderPath)) {
             Files.createDirectories(artistFolderPath)
@@ -145,7 +142,7 @@ object BandcampCollectionDownloader {
         val amountFiles = albumFolderPath.toFile().listFiles()!!.size
         if (amountFiles < 2) {
 
-            val statdownloadParsed = BandcampAPIHelper.getStatData(downloadUrl, cookies, timeout, gson)
+            val statdownloadParsed = BandcampAPIHelper.getStatData(downloadUrl, cookies, timeout)
 
             // Use real download URL if it exists; otherwise the original URL should hopefully work instead
             val realDownloadURL = statdownloadParsed.download_url ?: downloadUrl

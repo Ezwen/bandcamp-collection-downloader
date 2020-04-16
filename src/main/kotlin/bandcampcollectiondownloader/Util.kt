@@ -14,7 +14,7 @@ import kotlin.streams.toList
 
 object Util {
 
-    const val BUFFER_SIZE = 4096
+    private const val BUFFER_SIZE = 4096
 
     /**
      * From http://www.codejava.net/java-se/networking/use-httpurlconnection-to-download-file-from-an-http-url

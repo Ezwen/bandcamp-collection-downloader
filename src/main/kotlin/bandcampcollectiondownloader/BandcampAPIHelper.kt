@@ -1,3 +1,5 @@
+package bandcampcollectiondownloader
+
 import com.google.gson.Gson
 import org.jsoup.HttpStatusException
 import org.jsoup.Jsoup
@@ -6,6 +8,8 @@ import java.util.*
 import java.util.regex.Pattern
 
 object BandcampAPIHelper {
+
+    private val gson = Gson()
 
     data class ParsedFanpageData(
             val fan_data: FanData,
@@ -48,7 +52,7 @@ object BandcampAPIHelper {
     )
 
 
-    private fun getDataBlobFromFanPage(doc: Document, gson: Gson): ParsedFanpageData {
+    private fun getDataBlobFromFanPage(doc: Document): ParsedFanpageData {
         println("Analyzing fan page…")
 
         // Get data blob
@@ -56,7 +60,7 @@ object BandcampAPIHelper {
         return gson.fromJson(downloadPageJson, ParsedFanpageData::class.java)
     }
 
-    fun getDataBlobFromDownloadPage(downloadPageURL: String?, cookies: Map<String, String>, gson: Gson, timeout: Int): DigitalItem? {
+    fun getDataBlobFromDownloadPage(downloadPageURL: String?, cookies: Map<String, String>, timeout: Int): DigitalItem? {
         // Get page content
         try {
             val downloadPage = Jsoup.connect(downloadPageURL)
@@ -78,7 +82,7 @@ object BandcampAPIHelper {
         }
     }
 
-    fun getCollection(cookies: Map<String, String>, timeout: Int, bandcampUser: String, gson: Gson): MutableMap<String, String> {
+    fun getCollection(cookies: Map<String, String>, timeout: Int, bandcampUser: String): MutableMap<String, String> {
 
 
         // Get collection page with cookies, hence with download links
@@ -97,7 +101,7 @@ object BandcampAPIHelper {
         println("""Found collection page: "${doc.title()}"""")
 
         // Get download pages
-        val fanPageBlob = getDataBlobFromFanPage(doc, gson)
+        val fanPageBlob = getDataBlobFromFanPage(doc)
         val collection = fanPageBlob.collection_data.redownload_urls.toMutableMap()
 
         if (collection.isEmpty()) {
@@ -139,7 +143,7 @@ object BandcampAPIHelper {
         return "https://f4.bcbits.com/img/a${artid}_10"
     }
 
-    fun getStatData(downloadUrl: String, cookies: Map<String, String>, timeout: Int, gson: Gson): ParsedStatDownload {
+    fun getStatData(downloadUrl: String, cookies: Map<String, String>, timeout: Int): ParsedStatDownload {
         println("Getting download information from the download URL ($downloadUrl)...")
 
         val random = Random()
@@ -164,9 +168,8 @@ object BandcampAPIHelper {
                 ).replaceAll("")
 
         // Parse statdownload JSON
-        val statdownloadParsed: ParsedStatDownload = gson.fromJson(statdownloadJSON, ParsedStatDownload::class.java)
 
-        return statdownloadParsed
+        return gson.fromJson(statdownloadJSON, ParsedStatDownload::class.java)
     }
 
 }

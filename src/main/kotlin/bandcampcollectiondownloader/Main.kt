@@ -1,6 +1,5 @@
 package bandcampcollectiondownloader
 
-import BandCampDownloaderError
 import picocli.CommandLine
 
 

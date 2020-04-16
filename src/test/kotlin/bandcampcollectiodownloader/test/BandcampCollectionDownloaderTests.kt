@@ -1,6 +1,7 @@
 package bandcampcollectiodownloader.test
 
-import BandCampDownloaderError
+import bandcampcollectiondownloader.Args
+import bandcampcollectiondownloader.BandCampDownloaderError
 import bandcampcollectiondownloader.BandcampCollectionDownloader
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -15,52 +16,72 @@ class BandcampCollectionDownloaderTests {
 
     @Test
     fun testErrorCookiesFileNotFound() {
+        val args = Args()
+        args.pathToCookiesFile = Paths.get("bli")
         assertThrows<BandCampDownloaderError> {
-            BandcampCollectionDownloader.downloadAll(Paths.get("bli"), "bli", "bli",
-                    Paths.get("bli"), 0, 5000, false)
+            BandcampCollectionDownloader.downloadAll(args)
         }
     }
 
+    //
     @Test
     fun testErrorCookiesFileInvalidJson() {
+        val args = Args()
+        args.pathToCookiesFile = Paths.get("./test-data/notjsoncookies.json")
         assertThrows<BandCampDownloaderError> {
-            BandcampCollectionDownloader.downloadAll(Paths.get("./test-data/notjsoncookies.json"), "bli", "bli", Paths.get("bli"), 0, 5000, false)
+            BandcampCollectionDownloader.downloadAll(args)
         }
     }
 
     @Test
     fun testErrorCookiesFileInvalidContent_wrongkey() {
+        val args = Args()
+        args.pathToCookiesFile = Paths.get("./test-data/invalidcookies_wrongkeys.json")
         assertThrows<BandCampDownloaderError> {
-            BandcampCollectionDownloader.downloadAll(Paths.get("./test-data/invalidcookies_wrongkeys.json"), "bli", "bli", Paths.get("bli"), 0, 5000, false)
+            BandcampCollectionDownloader.downloadAll(args)
         }
     }
 
     @Test
     fun testErrorCookiesFileInvalidContent_noarray() {
+        val args = Args()
+        args.pathToCookiesFile = Paths.get("./test-data/invalidcookies_noarray.json")
         assertThrows<BandCampDownloaderError> {
-            BandcampCollectionDownloader.downloadAll(Paths.get("./test-data/invalidcookies_noarray.json"), "bli", "bli", Paths.get("bli"), 0, 5000, false)
+            BandcampCollectionDownloader.downloadAll(args)
         }
     }
 
     @Test
     fun testErrorInvalidBandcampUser() {
+        val args = Args()
+        args.pathToCookiesFile = Paths.get("./test-data/wellformedcookies.json")
+        args.bandcampUser = "zerz1e3687dfs3df7"
+        args.timeout = 5000
         assertThrows<BandCampDownloaderError> {
-            BandcampCollectionDownloader.downloadAll(Paths.get("./test-data/wellformedcookies.json"), "zerz1e3687dfs3df7", "bli", Paths.get("bli"), 0, 5000, false)
+            BandcampCollectionDownloader.downloadAll(args)
         }
     }
 
     @Test
     fun testErrorCookiesUselessForBandcampUser() {
+        val args = Args()
+        args.pathToCookiesFile = Paths.get("./test-data/wellformedcookies.json")
+        args.bandcampUser = "bli"
+        args.timeout = 5000
         assertThrows<BandCampDownloaderError> {
-            BandcampCollectionDownloader.downloadAll(Paths.get("./test-data/wellformedcookies.json"), "bli", "bli", Paths.get("bli"), 0, 5000, false)
+            BandcampCollectionDownloader.downloadAll(args)
         }
     }
 
     @Test
     fun testErrorNoCookiesAtAll() {
         addToEnv("HOME", "NOPE")
+        val args = Args()
+        args.pathToCookiesFile = null
+        args.bandcampUser = "bli"
+        args.timeout = 5000
         assertThrows<BandCampDownloaderError> {
-            BandcampCollectionDownloader.downloadAll(null, "bli", "bli", Paths.get("bli"), 0, 5000, false)
+            BandcampCollectionDownloader.downloadAll(args)
         }
     }
 

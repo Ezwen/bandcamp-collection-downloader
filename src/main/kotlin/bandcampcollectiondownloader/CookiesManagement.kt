@@ -1,5 +1,5 @@
+package bandcampcollectiondownloader
 
-import bandcampcollectiondownloader.Util
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.google.gson.annotations.SerializedName
@@ -13,6 +13,8 @@ import java.sql.DriverManager
 import java.time.Instant
 
 object CookiesManagement {
+
+    private val gson = Gson()
 
     data class ParsedCookie(
             @SerializedName("Name raw")
@@ -38,7 +40,7 @@ object CookiesManagement {
     }
 
 
-    fun retrieveCookiesFromFile(cookiesFile: Path, gson: Gson): Map<String, String> {
+    fun retrieveCookiesFromFile(cookiesFile: Path): Map<String, String> {
         if (!Files.exists(cookiesFile)) {
             throw BandCampDownloaderError("Cookies file '$cookiesFile' cannot be found.")
         }
