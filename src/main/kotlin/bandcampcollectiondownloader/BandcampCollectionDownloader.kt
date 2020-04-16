@@ -9,9 +9,27 @@ import java.time.Instant
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatterBuilder
 import java.util.*
-
+import java.util.concurrent.*
 
 object BandcampCollectionDownloader {
+
+    class Cache constructor(private val path: Path) {
+
+        fun getContent(): List<String> {
+            if (!path.toFile().exists()) {
+                return emptyList()
+            }
+            return path.toFile().readLines()
+        }
+
+        fun add(line: String) {
+            if (!Files.exists(path)) {
+                Files.createFile(path)
+            }
+            path.toFile().appendText(line + "\n")
+        }
+
+    }
 
 
     /**
@@ -19,6 +37,7 @@ object BandcampCollectionDownloader {
      */
     fun downloadAll(args: Args) {
 
+        println("Chosen download folder: " + args.pathToDownloadFolder.toAbsolutePath().normalize())
 
         val cookies =
 
@@ -33,44 +52,42 @@ object BandcampCollectionDownloader {
                 }
 
         val connector = BandcampAPIConnector(args.bandcampUser, cookies, args.timeout)
-        connector.init()
+        val pageName = connector.init()
 
-        println("Found a collection of ${connector.getAllSaleItemIDs().size} items.")
+        println("""Found "$pageName" with ${connector.getAllSaleItemIDs().size} items.""")
 
-        val cacheFile = args.pathToDownloadFolder.resolve("bandcamp-collection-downloader.cache")
-        val cache = loadCache(cacheFile).toMutableList()
+        val cacheFilePath = args.pathToDownloadFolder.resolve("bandcamp-collection-downloader.cache")
+        val cache = Cache(cacheFilePath)
+        val cacheContent = cache.getContent()
 
-        val itemsToDownload = connector.getAllSaleItemIDs().filter { saleItemId -> saleItemId !in cache }
+        val itemsToDownload = connector.getAllSaleItemIDs().filter { saleItemId -> saleItemId !in cacheContent }
 
         val alreadyDownloadedItemsCount = connector.getAllSaleItemIDs().size - itemsToDownload.size
         if (alreadyDownloadedItemsCount > 0) {
-            println("Skipping $alreadyDownloadedItemsCount already downloaded items, based on '${cacheFile.fileName}'.")
+            println("Skipping $alreadyDownloadedItemsCount already downloaded items (based on '${cacheFilePath.toAbsolutePath().normalize()}').")
         }
 
-        // For each download page
         for (saleItemID in itemsToDownload) {
             val itemNumber = itemsToDownload.indexOf(saleItemID) + 1
             println("Managing item $itemNumber/${itemsToDownload.size}")
-            manageDownloadPage(connector, saleItemID, args, cache, cacheFile)
+            manageDownloadPage(connector, saleItemID, args, cache)
         }
     }
 
-    private fun manageDownloadPage(connector: BandcampAPIConnector, saleItemId: String, args: Args, cache: MutableList<String>, cacheFile: Path) {
+    private fun manageDownloadPage(connector: BandcampAPIConnector, saleItemId: String, args: Args, cache: Cache) {
 
-        println("Getting data from item page…")
         val digitalItem = connector.retrieveDigitalItemData(saleItemId)
 
         // If null, then the download page is simply invalid and not usable anymore, therefore it can be added to the cache
         if (digitalItem == null) {
             println("Sale Item ID $saleItemId cannot be downloaded anymore (maybe a refund?); skipping")
             cache.add(saleItemId)
-            addToCache(cacheFile, saleItemId)
             return
         }
 
         var releasetitle = digitalItem.title
         var artist = digitalItem.artist
-        println("""→ found release "${digitalItem.title}" from ${digitalItem.artist}.""")
+        println("""Found release "${digitalItem.title}" from ${digitalItem.artist}.""")
 
         // Skip preorders
         val dateFormatter = DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd MMM yyyy HH:mm:ss zzz").toFormatter(Locale.ENGLISH)
@@ -113,9 +130,8 @@ object BandcampCollectionDownloader {
                 } else {
                     println("Release already exists on disk, skipping.")
                 }
-                if (saleItemId !in cache) {
+                if (saleItemId !in cache.getContent()) {
                     cache.add(saleItemId)
-                    addToCache(cacheFile, saleItemId)
                 }
                 break
             } catch (e: Throwable) {
@@ -171,21 +187,4 @@ object BandcampCollectionDownloader {
             return false
         }
     }
-
-
-    private fun loadCache(path: Path): List<String> {
-        if (!path.toFile().exists()) {
-            return emptyList()
-        }
-
-        return path.toFile().readLines()
-    }
-
-    private fun addToCache(path: Path, line: String) {
-        if (!Files.exists(path)) {
-            Files.createFile(path)
-        }
-        path.toFile().appendText(line + "\n")
-    }
-
 }

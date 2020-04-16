@@ -21,7 +21,7 @@ object Util {
      */
     fun downloadFile(fileURL: String, saveDir: Path, optionalFileName: String = "", timeout: Int): Path {
 
-        println("Downloading from $fileURL…")
+        println("Downloading $fileURL…")
 
         val url = URL(fileURL)
         val httpConn = url.openConnection() as HttpURLConnection

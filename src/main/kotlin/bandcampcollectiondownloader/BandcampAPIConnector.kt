@@ -53,7 +53,7 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
             val url: String
     )
 
-    fun init() {
+    fun init() : String {
 
         // Get collection page with cookies, hence with download links
         val doc = try {
@@ -68,7 +68,6 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
                 throw e
             }
         }
-        println("""Analyzing collection page: "${doc.title()}"""")
 
         // Get download pages
         val downloadPageJson = doc.select("#pagedata").attr("data-blob")
@@ -87,7 +86,6 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
             var moreAvailable = true
             while (moreAvailable) {
                 // Append download pages from this api endpoint as well
-                // println("Requesting collection_items API older than token $lastToken")
                 val theRest = try {
                     Jsoup.connect("https://bandcamp.com/api/fancollection/1/collection_items")
                             .ignoreContentType(true)
@@ -108,6 +106,8 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
         }
 
         this.saleItemIDs2saleItemURLs.putAll(collection)
+
+        return doc.title()
     }
 
 
@@ -161,8 +161,6 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
         if (downloadUrl.isEmpty()) {
             return null
         }
-
-        println("Getting download information from the download URL ($downloadUrl)...")
 
         val random = Random()
 
