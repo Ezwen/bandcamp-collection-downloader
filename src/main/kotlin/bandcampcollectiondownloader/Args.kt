@@ -6,7 +6,7 @@ import java.nio.file.Paths
 
 data class Args(
         @CommandLine.Parameters(arity = "1..1",
-                description = ["The bandcamp user account from which all albums must be downloaded."])
+                description = ["The bandcamp user account from which all releases must be downloaded."])
         var bandcampUser: String = "",
 
         @CommandLine.Option(names = ["--cookies-file", "-c"], required = false,
@@ -18,19 +18,19 @@ data class Args(
         var audioFormat: String = "vorbis",
 
         @CommandLine.Option(names = ["--download-folder", "-d"], required = false,
-                description = ["The folder in which downloaded albums must be extracted.", "The following structure is considered: <pathToDownloadFolder>/<artist>/<year> - <album>.", "(default: current folder)"])
+                description = ["The folder in which downloaded releases must be extracted.", "The following structure is considered: <pathToDownloadFolder>/<artist>/<year> - <release>.", "(default: current folder)"])
         var pathToDownloadFolder: Path = Paths.get("."),
 
         @CommandLine.Option(names = ["-h", "--help"], usageHelp = true, description = ["Display this help message."])
         var help: Boolean = false,
 
-        @CommandLine.Option(names = ["-r", "--retries"], usageHelp = false, description = ["Amount of retries when downloading an album (default: 3)."])
+        @CommandLine.Option(names = ["-r", "--retries"], usageHelp = false, description = ["Amount of retries when downloading a release (default: 3)."])
         var retries: Int = 3,
 
         @CommandLine.Option(names = ["-t", "--timeout"], usageHelp = false, description = ["Timeout in ms before giving up an HTTP connection (default: 50000)."])
         var timeout: Int = 50000,
 
-        @CommandLine.Option(names = ["-e", "--skip-failed-albums"], description = ["Skip albums that fail to download after the specified number of retries."])
-        var ignoreFailedAlbums: Boolean = false
+        @CommandLine.Option(names = ["-e", "--skip-failed-releases"], description = ["Skip releases that fail to download after the specified number of retries."])
+        var ignoreFailedReleases: Boolean = false
 
 )

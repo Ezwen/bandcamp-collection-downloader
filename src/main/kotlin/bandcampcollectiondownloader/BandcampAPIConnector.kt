@@ -3,37 +3,39 @@ package bandcampcollectiondownloader
 import com.google.gson.Gson
 import org.jsoup.HttpStatusException
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
 import java.util.*
 import java.util.regex.Pattern
 
-object BandcampAPIHelper {
+class BandcampAPIConnector constructor(private val bandcampUser: String, private val cookies: Map<String, String>, private val timeout: Int) {
 
     private val gson = Gson()
 
-    data class ParsedFanpageData(
+    private val saleItemIDs2saleItemURLs: MutableMap<String, String> = HashMap<String, String>()
+    private val saleItemIDs2digitalItems: MutableMap<String, DigitalItem?> = HashMap<String, DigitalItem?>()
+
+    private data class ParsedFanpageData(
             val fan_data: FanData,
             val collection_data: CollectionData
     )
 
-    data class FanData(
+    private data class FanData(
             val fan_id: String
     )
 
-    data class CollectionData(
+    private data class CollectionData(
             val batch_size: Int,
             val item_count: Int,
             val last_token: String,
             val redownload_urls: Map<String, String>
     )
 
-    data class ParsedCollectionItems(
+    private data class ParsedCollectionItems(
             val more_available: Boolean,
             val last_token: String,
             val redownload_urls: Map<String, String>
     )
 
-    data class ParsedBandcampData(
+    private data class ParsedBandcampData(
             @Suppress("ArrayInDataClass") val digital_items: Array<DigitalItem>
     )
 
@@ -46,44 +48,12 @@ object BandcampAPIHelper {
             val art_id: String
     )
 
-    data class ParsedStatDownload(
+    private data class ParsedStatDownload(
             val download_url: String?,
             val url: String
     )
 
-
-    private fun getDataBlobFromFanPage(doc: Document): ParsedFanpageData {
-        println("Analyzing fan page…")
-
-        // Get data blob
-        val downloadPageJson = doc.select("#pagedata").attr("data-blob")
-        return gson.fromJson(downloadPageJson, ParsedFanpageData::class.java)
-    }
-
-    fun getDataBlobFromDownloadPage(downloadPageURL: String?, cookies: Map<String, String>, timeout: Int): DigitalItem? {
-        // Get page content
-        try {
-            val downloadPage = Jsoup.connect(downloadPageURL)
-                    .cookies(cookies)
-                    .timeout(timeout).get()
-
-            // Get data blob
-            val downloadPageJson = downloadPage.select("#pagedata").attr("data-blob")
-            val data = gson.fromJson(downloadPageJson, ParsedBandcampData::class.java)
-            return data.digital_items[0]
-
-        } catch (e: HttpStatusException) {
-
-            // If 404, then the download page is not usable anymore for some reason (eg. a refund was given for the purchase)
-            if (e.statusCode == 404)
-                return null
-            else
-                throw e
-        }
-    }
-
-    fun getCollection(cookies: Map<String, String>, timeout: Int, bandcampUser: String): MutableMap<String, String> {
-
+    fun init() {
 
         // Get collection page with cookies, hence with download links
         val doc = try {
@@ -98,10 +68,12 @@ object BandcampAPIHelper {
                 throw e
             }
         }
-        println("""Found collection page: "${doc.title()}"""")
+        println("""Analyzing collection page: "${doc.title()}"""")
 
         // Get download pages
-        val fanPageBlob = getDataBlobFromFanPage(doc)
+        val downloadPageJson = doc.select("#pagedata").attr("data-blob")
+        val fanPageBlob = gson.fromJson(downloadPageJson, ParsedFanpageData::class.java)
+
         val collection = fanPageBlob.collection_data.redownload_urls.toMutableMap()
 
         if (collection.isEmpty()) {
@@ -135,15 +107,61 @@ object BandcampAPIHelper {
             }
         }
 
-        return collection
+        this.saleItemIDs2saleItemURLs.putAll(collection)
     }
 
 
-    fun getCoverURL(artid: String): String {
+    fun getAllSaleItemIDs(): Set<String> {
+        return saleItemIDs2saleItemURLs.keys
+    }
+
+
+    fun getCoverURL(saleItemID: String): String {
+        val artid = this.retrieveDigitalItemData(saleItemID)!!.art_id
         return "https://f4.bcbits.com/img/a${artid}_10"
     }
 
-    fun getStatData(downloadUrl: String, cookies: Map<String, String>, timeout: Int): ParsedStatDownload {
+    fun retrieveDigitalItemData(saleItemID: String): DigitalItem? {
+
+        if (!this.saleItemIDs2digitalItems.containsKey(saleItemID)) {
+
+            val saleItemURL = this.saleItemIDs2saleItemURLs[saleItemID]
+
+            // Get page content
+            try {
+                val downloadPage = Jsoup.connect(saleItemURL)
+                        .cookies(cookies)
+                        .timeout(timeout).get()
+
+                // Get data blob
+                val downloadPageJson = downloadPage.select("#pagedata").attr("data-blob")
+                val data = gson.fromJson(downloadPageJson, ParsedBandcampData::class.java)
+                this.saleItemIDs2digitalItems[saleItemID] = data.digital_items[0]
+
+            } catch (e: HttpStatusException) {
+
+                // If 404, then the download page is not usable anymore for some reason (eg. a refund was given for the purchase)
+                if (e.statusCode == 404)
+                    this.saleItemIDs2digitalItems[saleItemID] = null
+                else
+                    throw e
+            }
+
+        }
+
+        return this.saleItemIDs2digitalItems[saleItemID]
+    }
+
+
+
+    fun retrieveRealDownloadURL(saleItemID: String, audioFormat: String) : String?{
+        val digitalItem = this.retrieveDigitalItemData(saleItemID)
+        val downloadUrl = digitalItem!!.downloads[audioFormat]?.get("url").orEmpty()
+
+        if (downloadUrl.isEmpty()) {
+            return null
+        }
+
         println("Getting download information from the download URL ($downloadUrl)...")
 
         val random = Random()
@@ -169,7 +187,9 @@ object BandcampAPIHelper {
 
         // Parse statdownload JSON
 
-        return gson.fromJson(statdownloadJSON, ParsedStatDownload::class.java)
+        val statdownloadParsed = gson.fromJson(statdownloadJSON, ParsedStatDownload::class.java)
+
+        return statdownloadParsed.download_url ?: downloadUrl
     }
 
 }

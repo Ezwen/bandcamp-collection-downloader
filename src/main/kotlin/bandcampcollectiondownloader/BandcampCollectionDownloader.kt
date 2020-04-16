@@ -32,32 +32,33 @@ object BandcampCollectionDownloader {
                     CookiesManagement.retrieveFirefoxCookies()
                 }
 
-        val collection = BandcampAPIHelper.getCollection(cookies, args.timeout, args.bandcampUser)
+        val connector = BandcampAPIConnector(args.bandcampUser, cookies, args.timeout)
+        connector.init()
 
-        println("Found a collection of ${collection.size} items.")
+        println("Found a collection of ${connector.getAllSaleItemIDs().size} items.")
 
         val cacheFile = args.pathToDownloadFolder.resolve("bandcamp-collection-downloader.cache")
         val cache = loadCache(cacheFile).toMutableList()
 
-        val itemsToDownload = collection.filter { (saleItemId, _) -> saleItemId !in cache }
+        val itemsToDownload = connector.getAllSaleItemIDs().filter { saleItemId -> saleItemId !in cache }
 
-        val alreadyDownloadedItemsCount = collection.size - itemsToDownload.size
+        val alreadyDownloadedItemsCount = connector.getAllSaleItemIDs().size - itemsToDownload.size
         if (alreadyDownloadedItemsCount > 0) {
             println("Skipping $alreadyDownloadedItemsCount already downloaded items, based on '${cacheFile.fileName}'.")
         }
 
         // For each download page
-        for (entry in itemsToDownload) {
-            val itemNumber = itemsToDownload.entries.indexOf(entry) + 1
+        for (saleItemID in itemsToDownload) {
+            val itemNumber = itemsToDownload.indexOf(saleItemID) + 1
             println("Managing item $itemNumber/${itemsToDownload.size}")
-            manageDownloadPage(entry.key, entry.value, cookies, args, cache, cacheFile )
+            manageDownloadPage(connector, saleItemID, args, cache, cacheFile)
         }
     }
 
-    private fun manageDownloadPage(saleItemId: String, redownloadUrl: String, cookies: Map<String, String>, args: Args, cache: MutableList<String>, cacheFile: Path) {
+    private fun manageDownloadPage(connector: BandcampAPIConnector, saleItemId: String, args: Args, cache: MutableList<String>, cacheFile: Path) {
 
-        println("Getting data from item page ($redownloadUrl)…")
-        val digitalItem = BandcampAPIHelper.getDataBlobFromDownloadPage(redownloadUrl, cookies, args.timeout)
+        println("Getting data from item page…")
+        val digitalItem = connector.retrieveDigitalItemData(saleItemId)
 
         // If null, then the download page is simply invalid and not usable anymore, therefore it can be added to the cache
         if (digitalItem == null) {
@@ -67,8 +68,7 @@ object BandcampCollectionDownloader {
             return
         }
 
-        // Extract data from blob
-        var albumtitle = digitalItem.title
+        var releasetitle = digitalItem.title
         var artist = digitalItem.artist
         println("""→ found release "${digitalItem.title}" from ${digitalItem.artist}.""")
 
@@ -76,29 +76,29 @@ object BandcampCollectionDownloader {
         val dateFormatter = DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd MMM yyyy HH:mm:ss zzz").toFormatter(Locale.ENGLISH)
         val releaseUTC = ZonedDateTime.parse(digitalItem.package_release_date, dateFormatter).toInstant()
         if (releaseUTC > Instant.now()) {
-            println("Sale Item ID $saleItemId ($artist - $albumtitle) is a preorder; skipping")
+            println("Sale Item ID $saleItemId ($artist − $releasetitle) is a preorder; skipping")
             return
         }
 
         val releaseDate = digitalItem.package_release_date
         val releaseYear = releaseDate.subSequence(7, 11)
         val isSingleTrack: Boolean = digitalItem.download_type == "t"
-        val downloadUrl = digitalItem.downloads[args.audioFormat]?.get("url").orEmpty()
-        if (downloadUrl.isEmpty()) {
-            throw BandCampDownloaderError("No URL found (is the download format correct?)")
-        }
-        val artid = digitalItem.art_id
+
+        val downloadUrl = connector.retrieveRealDownloadURL(saleItemId, args.audioFormat)
+                ?: throw BandCampDownloaderError("No URL found (is the download format correct?)")// digitalItem.downloads[args.audioFormat]?.get("url").orEmpty()
 
         // Replace invalid chars by similar unicode chars
-        albumtitle = Util.replaceInvalidCharsByUnicode(albumtitle)
+        releasetitle = Util.replaceInvalidCharsByUnicode(releasetitle)
         artist = Util.replaceInvalidCharsByUnicode(artist)
 
-        // Prepare artist and album folder
-        val albumFolderName = "$releaseYear - $albumtitle"
+        // Prepare artist and release folder
+        val releaseFolderName = "$releaseYear - $releasetitle"
         val artistFolderPath = Paths.get("${args.pathToDownloadFolder}").resolve(artist)
-        val albumFolderPath = artistFolderPath.resolve(albumFolderName)
+        val releaseFolderPath = artistFolderPath.resolve(releaseFolderName)
 
-        // Download album, with as many retries as configured
+        val coverURL = connector.getCoverURL(saleItemId)
+
+        // Download release, with as many retries as configured
         val attempts = args.retries + 1
         for (i in 1..attempts) {
             if (i > 1) {
@@ -106,7 +106,8 @@ object BandcampCollectionDownloader {
                 sleep(1000)
             }
             try {
-                val downloaded = downloadAlbum(artistFolderPath, albumFolderPath, downloadUrl, cookies, isSingleTrack, artid, args.timeout)
+                val downloaded = downloadRelease(downloadUrl, artistFolderPath, releaseFolderPath, isSingleTrack, args.timeout, coverURL)
+
                 if (downloaded) {
                     println("done.")
                 } else {
@@ -120,7 +121,7 @@ object BandcampCollectionDownloader {
             } catch (e: Throwable) {
                 println("""Error while downloading: "${e.javaClass.name}: ${e.message}".""")
                 if (i == attempts) {
-                    if (args.ignoreFailedAlbums) {
+                    if (args.ignoreFailedReleases) {
                         println("Could not download release after ${args.retries} retries.")
                     } else {
                         throw BandCampDownloaderError("Could not download release after ${args.retries} retries.")
@@ -131,35 +132,30 @@ object BandcampCollectionDownloader {
     }
 
 
-    private fun downloadAlbum(artistFolderPath: Path, albumFolderPath: Path, downloadUrl: String, cookies: Map<String, String>, isSingleTrack: Boolean, artid: String, timeout: Int): Boolean {
+    private fun downloadRelease(fileURL: String, artistFolderPath: Path, releaseFolderPath: Path, isSingleTrack: Boolean, timeout: Int, coverURL: String): Boolean {
         // If the artist folder does not exist, we create it
         if (!Files.exists(artistFolderPath)) {
             Files.createDirectories(artistFolderPath)
         }
 
-        // If the album folder does not exist, we create it
-        if (!Files.exists(albumFolderPath)) {
-            Files.createDirectories(albumFolderPath)
+        // If the release folder does not exist, we create it
+        if (!Files.exists(releaseFolderPath)) {
+            Files.createDirectories(releaseFolderPath)
         }
 
         // If the folder is empty, or if it only contains the zip.part file, we proceed
-        val amountFiles = albumFolderPath.toFile().listFiles()!!.size
+        val amountFiles = releaseFolderPath.toFile().listFiles()!!.size
         if (amountFiles < 2) {
 
-            val statdownloadParsed = BandcampAPIHelper.getStatData(downloadUrl, cookies, timeout)
-
-            // Use real download URL if it exists; otherwise the original URL should hopefully work instead
-            val realDownloadURL = statdownloadParsed.download_url ?: downloadUrl
-
             // Download content
-            val outputFilePath: Path = Util.downloadFile(realDownloadURL, albumFolderPath, timeout = timeout)
+            val outputFilePath: Path = Util.downloadFile(fileURL, releaseFolderPath, timeout = timeout)
 
             // If this is a zip, we unzip
             if (!isSingleTrack) {
 
                 // Unzip
                 try {
-                    ZipUtil.unpack(outputFilePath.toFile(), albumFolderPath.toFile())
+                    ZipUtil.unpack(outputFilePath.toFile(), releaseFolderPath.toFile())
                 } finally {
                     // Delete zip
                     Files.delete(outputFilePath)
@@ -168,8 +164,7 @@ object BandcampCollectionDownloader {
 
             // Else if this is a single track, we just fetch the cover
             else {
-                val coverURL = BandcampAPIHelper.getCoverURL(artid)
-                Util.downloadFile(coverURL, albumFolderPath, "cover.jpg", timeout)
+                Util.downloadFile(coverURL, releaseFolderPath, "cover.jpg", timeout)
             }
             return true
         } else {
