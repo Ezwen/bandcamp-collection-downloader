@@ -53,7 +53,8 @@ data class DigitalItem(
 )
 
 data class ParsedStatDownload(
-        val download_url: String
+        val download_url: String?,
+        val url: String
 )
 
 
@@ -323,12 +324,13 @@ fun prepareDownload(albumtitle: String, url: String, cookies: Map<String, String
                             .replaceAll("")
             ).replaceAll("")
 
-    // Parse statdownload JSON and get real download URL, and retrieve url
+    // Parse statdownload JSON
     val statdownloadParsed: ParsedStatDownload = gson.fromJson(statdownloadJSON, ParsedStatDownload::class.java)
-    val realDownloadURL = statdownloadParsed.download_url
 
-    println("Downloading $albumtitle ($realDownloadURL)")
+    // Get real download URL if it exists; otherwise the original URL should hopefully work instead
+    val realDownloadURL = statdownloadParsed.download_url ?: url
 
     // Download content
+    println("Downloading $albumtitle ($realDownloadURL)")
     return downloadFile(realDownloadURL, albumFolderPath, timeout = timeout)
 }

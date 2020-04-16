@@ -3,10 +3,13 @@ package bandcampcollectiondownloader
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.text.DecimalFormat
+import java.util.function.BiPredicate
 import javax.mail.internet.ContentDisposition
+import kotlin.streams.toList
 
 
 const val BUFFER_SIZE = 4096
@@ -35,7 +38,8 @@ fun downloadFile(fileURL: String, saveDir: Path, optionalFileName: String = "", 
                     }
                     else -> Paths.get(url.file).fileName.toString()
                 }
-        val fileSize: Int = httpConn.getHeaderField("Content-Length").toInt()
+        val contentLengthHeaderField = httpConn.getHeaderField("Content-Length")
+        val fileSize: Long = contentLengthHeaderField.toLong()
 
         // opens input stream from the HTTP connection
         val inputStream = httpConn.inputStream
@@ -47,7 +51,7 @@ fun downloadFile(fileURL: String, saveDir: Path, optionalFileName: String = "", 
 
         val buffer = ByteArray(BUFFER_SIZE)
         var bytesRead = inputStream.read(buffer)
-        var total = 0
+        var total : Long = 0
         while (bytesRead != -1) {
             // Print progress
             val percent = total.toDouble() / fileSize.toDouble() * 100
@@ -88,4 +92,13 @@ fun replaceInvalidCharsByUnicode(s: String): String {
     result = result.replace('/', '／')
     result = result.replace('\\', '⧹')
     return result
+}
+
+// WIP
+fun getFileIgnoreCase(path: Path): List<Path> {
+    val parentFolder = path.parent
+    val fileName = path.fileName.toString()
+    return Files.find(parentFolder, 1, BiPredicate { p2, fileAttributes ->
+        p2.fileName.toString().toLowerCase().equals(fileName.toLowerCase())
+    }).toList()
 }
