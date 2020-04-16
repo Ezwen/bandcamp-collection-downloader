@@ -4,9 +4,9 @@ A command-line tool written in Kotlin to automatically download all albums of a 
 
 
 ```
-Usage: <main class> [-h] [-c=<pathToCookiesFile>] [-d=<pathToDownloadFolder>] [-f=<audioFormat>] [-r=<retries>] [-t=<timeout>]
+Usage: <main class> [-eh] [-c=<pathToCookiesFile>] [-d=<pathToDownloadFolder>] [-f=<audioFormat>] [-r=<retries>] [-t=<timeout>]
                     <bandcampUser>
-      <bandcampUser>        The bandcamp user account from which all albums must be downloaded.
+      <bandcampUser>        The bandcamp user account from which all releases must be downloaded.
   -c, --cookies-file=<pathToCookiesFile>
                             A JSON file with valid bandcamp credential cookies.
                             "Cookie Quick Manager" can be used to obtain this file after logging into bandcamp.
@@ -14,18 +14,18 @@ Usage: <main class> [-h] [-c=<pathToCookiesFile>] [-d=<pathToDownloadFolder>] [-
                             If no cookies file is provided, cookies from the local Firefox installation are used (Windows and Linux
                               only).
   -d, --download-folder=<pathToDownloadFolder>
-                            The folder in which downloaded albums must be extracted.
-                            The following structure is considered: <pathToDownloadFolder>/<artist>/<year> - <album>.
+                            The folder in which downloaded releases must be extracted.
+                            The following structure is considered: <pathToDownloadFolder>/<artist>/<year> - <release>.
                             (default: current folder)
+  -e, --skip-failed-releases
+                            Skip releases that fail to download after the specified number of retries.
   -f, --audio-format=<audioFormat>
                             The chosen audio format of the files to download (default: vorbis).
                             Possible values: flac, wav, aac-hi, mp3-320, aiff-lossless, vorbis, mp3-v0, alac.
   -h, --help                Display this help message.
-  -r, --retries=<retries>   Amount of retries when downloading an album.
-  -t, --timeout=<timeout>   Timeout in ms before giving up an HTTP connection.
-  -e, --skip-failed-albums
-                            Skip albums that fail to download after the specified number of retries. 
-                            Without this flag, an error will be thrown and processing will stop.
+  -r, --retries=<retries>   Amount of retries when downloading a release (default: 3).
+  -t, --timeout=<timeout>   Timeout in ms before giving up an HTTP connection (default: 50000).
+
 ```
 
 ## Bandcamp authentication 
