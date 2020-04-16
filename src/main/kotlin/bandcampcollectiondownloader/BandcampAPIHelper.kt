@@ -49,16 +49,14 @@ object BandcampAPIHelper {
 
 
     private fun getDataBlobFromFanPage(doc: Document, gson: Gson): ParsedFanpageData {
-        println("Analyzing fan page")
+        println("Analyzing fan page…")
 
         // Get data blob
         val downloadPageJson = doc.select("#pagedata").attr("data-blob")
         return gson.fromJson(downloadPageJson, ParsedFanpageData::class.java)
     }
 
-    fun getDataBlobFromDownloadPage(downloadPageURL: String?, cookies: Map<String, String>, gson: Gson, timeout: Int): ParsedBandcampData? {
-        println("Getting data from item page ($downloadPageURL)")
-
+    fun getDataBlobFromDownloadPage(downloadPageURL: String?, cookies: Map<String, String>, gson: Gson, timeout: Int): DigitalItem? {
         // Get page content
         try {
             val downloadPage = Jsoup.connect(downloadPageURL)
@@ -67,7 +65,8 @@ object BandcampAPIHelper {
 
             // Get data blob
             val downloadPageJson = downloadPage.select("#pagedata").attr("data-blob")
-            return gson.fromJson(downloadPageJson, ParsedBandcampData::class.java)
+            val data = gson.fromJson(downloadPageJson, ParsedBandcampData::class.java)
+            return data.digital_items[0]
 
         } catch (e: HttpStatusException) {
 

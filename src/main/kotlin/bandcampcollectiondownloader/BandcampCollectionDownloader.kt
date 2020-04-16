@@ -56,10 +56,11 @@ object BandcampCollectionDownloader {
             return
         }
 
-        val downloadPageJsonParsed = BandcampAPIHelper.getDataBlobFromDownloadPage(redownloadUrl, cookies, gson, timeout)
+        println("Getting data from item page ($redownloadUrl)…")
+        val digitalItem = BandcampAPIHelper.getDataBlobFromDownloadPage(redownloadUrl, cookies, gson, timeout)
 
         // If null, then the download page is simply invalid and not usable anymore, therefore it can be added to the cache
-        if (downloadPageJsonParsed == null) {
+        if (digitalItem == null) {
             println("Sale Item ID $saleItemId cannot be downloaded anymore (maybe a refund?); skipping")
             cache.add(saleItemId)
             addToCache(cacheFile, saleItemId)
@@ -67,9 +68,9 @@ object BandcampCollectionDownloader {
         }
 
         // Extract data from blob
-        val digitalItem = downloadPageJsonParsed.digital_items[0]
         var albumtitle = digitalItem.title
         var artist = digitalItem.artist
+        println("""→ found release "${digitalItem.title}" from ${digitalItem.artist}.""")
 
         // Skip preorders
         val dateFormatter = DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd MMM yyyy HH:mm:ss zzz").toFormatter(Locale.ENGLISH)
@@ -96,8 +97,6 @@ object BandcampCollectionDownloader {
         val albumFolderName = "$releaseYear - $albumtitle"
         val artistFolderPath = Paths.get("$downloadFolder").resolve(artist)
         val albumFolderPath = artistFolderPath.resolve(albumFolderName)
-
-        println("""→ found release "$albumtitle" from $artist ($releaseYear).""")
 
         // Download album, with as many retries as configured
         val attempts = retries + 1
