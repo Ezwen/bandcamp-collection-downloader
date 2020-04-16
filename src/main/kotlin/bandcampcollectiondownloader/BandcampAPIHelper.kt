@@ -57,7 +57,7 @@ object BandcampAPIHelper {
     }
 
     fun getDataBlobFromDownloadPage(downloadPageURL: String?, cookies: Map<String, String>, gson: Gson, timeout: Int): ParsedBandcampData? {
-        println("Analyzing download page $downloadPageURL")
+        println("Getting data from item page ($downloadPageURL)")
 
         // Get page content
         try {
@@ -140,18 +140,17 @@ object BandcampAPIHelper {
         return "https://f4.bcbits.com/img/a${artid}_10"
     }
 
-    fun getStatData(url: String, albumtitle: String, cookies: Map<String, String>, timeout: Int, gson: Gson): ParsedStatDownload {
-        println("Preparing download of $albumtitle ($url)...")
+    fun getStatData(downloadUrl: String, cookies: Map<String, String>, timeout: Int, gson: Gson): ParsedStatDownload {
+        println("Getting download information from the download URL ($downloadUrl)...")
 
         val random = Random()
 
         // Construct statdownload request URL
-        val statdownloadURL: String = url
+        val statdownloadURL: String = downloadUrl
                 .replace("/download/", "/statdownload/")
                 .replace("http:", "https:") + "&.vrs=1" + "&.rand=" + random.nextInt()
 
         // Get statdownload JSON
-        println("Getting download link ($statdownloadURL)")
         val statedownloadUglyBody: String = Jsoup.connect(statdownloadURL)
                 .cookies(cookies)
                 .timeout(timeout)
