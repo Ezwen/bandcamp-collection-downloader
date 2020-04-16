@@ -16,12 +16,17 @@ object CookiesManagement {
 
     private val gson = Gson()
 
-    data class ParsedCookie(
+    private data class ParsedCookie(
             @SerializedName("Name raw")
             val nameRaw: String?,
 
             @SerializedName("Content raw")
             val contentRaw: String?
+    )
+
+    data class Cookies (
+        val source: Path,
+        val content: Map<String,String>
     )
 
 
@@ -40,7 +45,7 @@ object CookiesManagement {
     }
 
 
-    fun retrieveCookiesFromFile(cookiesFile: Path): Map<String, String> {
+    fun retrieveCookiesFromFile(cookiesFile: Path): Cookies {
         if (!Files.exists(cookiesFile)) {
             throw BandCampDownloaderError("Cookies file '$cookiesFile' cannot be found.")
         }
@@ -51,10 +56,10 @@ object CookiesManagement {
                 } catch (e: JsonSyntaxException) {
                     throw BandCampDownloaderError("Cookies file '$cookiesFile' is not well formed: ${e.message}")
                 }
-        return parsedCookiesToMap(parsedCookies)
+        return Cookies(cookiesFile, parsedCookiesToMap(parsedCookies))
     }
 
-    fun retrieveFirefoxCookies(): HashMap<String, String> {
+    fun retrieveFirefoxCookies(): Cookies {
         val result = HashMap<String, String>()
 
         // Find cookies file path
@@ -117,7 +122,7 @@ object CookiesManagement {
         } finally {
             connection?.close()
         }
-        return result
+        return Cookies(cookiesFilePath, result)
     }
 
 }

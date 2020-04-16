@@ -37,24 +37,26 @@ object BandcampCollectionDownloader {
      */
     fun downloadAll(args: Args) {
 
-        println("Chosen download folder: " + args.pathToDownloadFolder.toAbsolutePath().normalize())
+        Util.log("Chosen download folder: " + args.pathToDownloadFolder.toAbsolutePath().normalize())
 
         val cookies =
 
                 if (args.pathToCookiesFile != null) {
                     // Parse JSON cookies (obtained with "Cookie Quick Manager" Firefox addon)
-                    println("Loading provided cookies file: ${args.pathToCookiesFile}")
+                    Util.log("Loading provided cookies file: ${args.pathToCookiesFile}")
                     CookiesManagement.retrieveCookiesFromFile(args.pathToCookiesFile!!)
                 } else {
                     // Try to find cookies stored in default firefox profile
-                    println("No provided cookies file, using Firefox cookies.")
-                    CookiesManagement.retrieveFirefoxCookies()
+                    Util.log("No provided cookies file, using Firefox cookies…")
+                    val cookies = CookiesManagement.retrieveFirefoxCookies()
+                    Util.log("Loaded cookies from: " + cookies.source)
+                    cookies
                 }
 
-        val connector = BandcampAPIConnector(args.bandcampUser, cookies, args.timeout)
+        val connector = BandcampAPIConnector(args.bandcampUser, cookies.content, args.timeout)
         val pageName = connector.init()
 
-        println("""Found "$pageName" with ${connector.getAllSaleItemIDs().size} items.""")
+        Util.log("""Found "$pageName" with ${connector.getAllSaleItemIDs().size} items.""")
 
         val cacheFilePath = args.pathToDownloadFolder.resolve("bandcamp-collection-downloader.cache")
         val cache = Cache(cacheFilePath)
@@ -64,13 +66,23 @@ object BandcampCollectionDownloader {
 
         val alreadyDownloadedItemsCount = connector.getAllSaleItemIDs().size - itemsToDownload.size
         if (alreadyDownloadedItemsCount > 0) {
-            println("Skipping $alreadyDownloadedItemsCount already downloaded items (based on '${cacheFilePath.toAbsolutePath().normalize()}').")
+            Util.log("Skipping $alreadyDownloadedItemsCount already downloaded items (based on '${cacheFilePath.toAbsolutePath().normalize()}').")
         }
 
+        val queue = ArrayBlockingQueue<Runnable>(100)
+        val threadPoolExecutor = ThreadPoolExecutor(args.jobs, args.jobs, 1, TimeUnit.HOURS, queue)
+
         for (saleItemID in itemsToDownload) {
-            val itemNumber = itemsToDownload.indexOf(saleItemID) + 1
-            println("Managing item $itemNumber/${itemsToDownload.size}")
-            manageDownloadPage(connector, saleItemID, args, cache)
+            val task = Runnable() {
+                val itemNumber = itemsToDownload.indexOf(saleItemID) + 1
+                Util.log("Managing item $itemNumber/${itemsToDownload.size}")
+                manageDownloadPage(connector, saleItemID, args, cache)
+            }
+            if (args.jobs > 1) {
+                threadPoolExecutor.execute(task)
+            } else {
+                task.run()
+            }
         }
     }
 
@@ -80,20 +92,20 @@ object BandcampCollectionDownloader {
 
         // If null, then the download page is simply invalid and not usable anymore, therefore it can be added to the cache
         if (digitalItem == null) {
-            println("Sale Item ID $saleItemId cannot be downloaded anymore (maybe a refund?); skipping")
+            Util.log("Sale Item ID $saleItemId cannot be downloaded anymore (maybe a refund?); skipping")
             cache.add(saleItemId)
             return
         }
 
         var releasetitle = digitalItem.title
         var artist = digitalItem.artist
-        println("""Found release "${digitalItem.title}" from ${digitalItem.artist}.""")
+        Util.log("""Found release "${digitalItem.title}" from ${digitalItem.artist}.""")
 
         // Skip preorders
         val dateFormatter = DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd MMM yyyy HH:mm:ss zzz").toFormatter(Locale.ENGLISH)
         val releaseUTC = ZonedDateTime.parse(digitalItem.package_release_date, dateFormatter).toInstant()
         if (releaseUTC > Instant.now()) {
-            println("Sale Item ID $saleItemId ($artist − $releasetitle) is a preorder; skipping")
+            Util.log("Sale Item ID $saleItemId ($artist − $releasetitle) is a preorder; skipping")
             return
         }
 
@@ -119,26 +131,26 @@ object BandcampCollectionDownloader {
         val attempts = args.retries + 1
         for (i in 1..attempts) {
             if (i > 1) {
-                println("Retrying download (${i - 1}/${args.retries}).")
+                Util.log("Retrying download (${i - 1}/${args.retries}).")
                 sleep(1000)
             }
             try {
                 val downloaded = downloadRelease(downloadUrl, artistFolderPath, releaseFolderPath, isSingleTrack, args.timeout, coverURL)
 
                 if (downloaded) {
-                    println("done.")
+                    Util.log("done.")
                 } else {
-                    println("Release already exists on disk, skipping.")
+                    Util.log("Release already exists on disk, skipping.")
                 }
                 if (saleItemId !in cache.getContent()) {
                     cache.add(saleItemId)
                 }
                 break
             } catch (e: Throwable) {
-                println("""Error while downloading: "${e.javaClass.name}: ${e.message}".""")
+                Util.log("""Error while downloading: "${e.javaClass.name}: ${e.message}".""")
                 if (i == attempts) {
                     if (args.ignoreFailedReleases) {
-                        println("Could not download release after ${args.retries} retries.")
+                        Util.log("Could not download release after ${args.retries} retries.")
                     } else {
                         throw BandCampDownloaderError("Could not download release after ${args.retries} retries.")
                     }
