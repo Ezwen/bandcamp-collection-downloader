@@ -125,6 +125,10 @@ object Util {
         }
     }
 
+    fun logSeparator() {
+        log("------------")
+    }
+
 
     // WIP
     fun getFileIgnoreCase(path: Path): List<Path> {

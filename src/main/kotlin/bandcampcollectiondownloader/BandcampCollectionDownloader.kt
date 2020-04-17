@@ -14,7 +14,6 @@ import java.util.concurrent.*
 object BandcampCollectionDownloader {
 
     class Cache constructor(private val path: Path) {
-
         fun getContent(): List<String> {
             if (!path.toFile().exists()) {
                 return emptyList()
@@ -28,56 +27,68 @@ object BandcampCollectionDownloader {
             }
             path.toFile().appendText(line + "\n")
         }
-
     }
 
 
     /**
-     * Core function called from the main
+     * Core function called from the Main function.
      */
     fun downloadAll(args: Args) {
-
-        Util.log("Chosen download folder: " + args.pathToDownloadFolder.toAbsolutePath().normalize())
+        Util.log("Target bandcamp account: " + args.bandcampUser)
+        Util.log("Target download folder: " + args.pathToDownloadFolder.toAbsolutePath().normalize())
+        Util.log("Target audio format: " + args.audioFormat)
+        Util.logSeparator()
 
         val cookies =
 
                 if (args.pathToCookiesFile != null) {
                     // Parse JSON cookies (obtained with "Cookie Quick Manager" Firefox addon)
-                    Util.log("Loading provided cookies file: ${args.pathToCookiesFile}")
+                    Util.log("Loading provided cookies file…")
                     CookiesManagement.retrieveCookiesFromFile(args.pathToCookiesFile!!)
                 } else {
                     // Try to find cookies stored in default firefox profile
                     Util.log("No provided cookies file, using Firefox cookies…")
-                    val cookies = CookiesManagement.retrieveFirefoxCookies()
-                    Util.log("Loaded cookies from: " + cookies.source)
-                    cookies
+                    CookiesManagement.retrieveFirefoxCookies()
                 }
+        Util.log("Loaded cookies from: " + cookies.source)
+        Util.logSeparator()
 
+        // Connect to bandcamp
+        Util.log("Connecting to Bandcamp…")
         val connector = BandcampAPIConnector(args.bandcampUser, cookies.content, args.timeout)
-        val pageName = connector.init()
-
+        connector.init()
+        val pageName = connector.getBandcampPageName()
         Util.log("""Found "$pageName" with ${connector.getAllSaleItemIDs().size} items.""")
 
+        // Prepare/load cache file
         val cacheFilePath = args.pathToDownloadFolder.resolve("bandcamp-collection-downloader.cache")
         val cache = Cache(cacheFilePath)
         val cacheContent = cache.getContent()
 
+        // Only work on items that have not been downloaded yet
         val itemsToDownload = connector.getAllSaleItemIDs().filter { saleItemId -> saleItemId !in cacheContent }
-
         val alreadyDownloadedItemsCount = connector.getAllSaleItemIDs().size - itemsToDownload.size
         if (alreadyDownloadedItemsCount > 0) {
-            Util.log("Skipping $alreadyDownloadedItemsCount already downloaded items (based on '${cacheFilePath.toAbsolutePath().normalize()}').")
+            Util.log("Ignoring $alreadyDownloadedItemsCount already downloaded items (based on '${cacheFilePath.toAbsolutePath().normalize()}').")
         }
 
+        Util.logSeparator()
+
+        // Prepare for parallel downloads
         val queue = ArrayBlockingQueue<Runnable>(100)
         val threadPoolExecutor = ThreadPoolExecutor(args.jobs, args.jobs, 1, TimeUnit.HOURS, queue)
 
+        // For each release of the bandcamp account that is yet to be downloaded
         for (saleItemID in itemsToDownload) {
-            val task = Runnable() {
+
+            // Prepare a task to run in a thread or not
+            val task = Runnable {
                 val itemNumber = itemsToDownload.indexOf(saleItemID) + 1
                 Util.log("Managing item $itemNumber/${itemsToDownload.size}")
                 manageDownloadPage(connector, saleItemID, args, cache)
             }
+
+            // Use threads only if j is more than 1
             if (args.jobs > 1) {
                 threadPoolExecutor.execute(task)
             } else {

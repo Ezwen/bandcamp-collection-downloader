@@ -8,10 +8,13 @@ import java.util.regex.Pattern
 
 class BandcampAPIConnector constructor(private val bandcampUser: String, private val cookies: Map<String, String>, private val timeout: Int) {
 
+    private var bandcampPageName: String? = null
     private val gson = Gson()
 
-    private val saleItemIDs2saleItemURLs: MutableMap<String, String> = HashMap<String, String>()
-    private val saleItemIDs2digitalItems: MutableMap<String, DigitalItem?> = HashMap<String, DigitalItem?>()
+    private val saleItemsIDs2saleItemsURLs: MutableMap<String, String> = HashMap<String, String>()
+    private val saleItemsIDs2digitalItems: MutableMap<String, DigitalItem?> = HashMap<String, DigitalItem?>()
+
+    private var initialized: Boolean = false
 
     private data class ParsedFanpageData(
             val fan_data: FanData,
@@ -53,79 +56,89 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
             val url: String
     )
 
-    fun init() : String {
+    fun init() {
 
-        // Get collection page with cookies, hence with download links
-        val doc = try {
-            Jsoup.connect("https://bandcamp.com/$bandcampUser")
-                    .timeout(timeout)
-                    .cookies(cookies)
-                    .get()
-        } catch (e: HttpStatusException) {
-            if (e.statusCode == 404) {
-                throw BandCampDownloaderError("The bandcamp user '$bandcampUser' does not exist.")
-            } else {
-                throw e
-            }
-        }
+        if (!initialized) {
 
-        // Get download pages
-        val downloadPageJson = doc.select("#pagedata").attr("data-blob")
-        val fanPageBlob = gson.fromJson(downloadPageJson, ParsedFanpageData::class.java)
-
-        val collection = fanPageBlob.collection_data.redownload_urls.toMutableMap()
-
-        if (collection.isEmpty()) {
-            throw BandCampDownloaderError("No download links could by found in the collection page. This can be caused by an outdated or invalid cookies file.")
-        }
-
-        // Get the rest of the collection
-        if (fanPageBlob.collection_data.item_count > fanPageBlob.collection_data.batch_size) {
-            val fanId = fanPageBlob.fan_data.fan_id
-            var lastToken = fanPageBlob.collection_data.last_token
-            var moreAvailable = true
-            while (moreAvailable) {
-                // Append download pages from this api endpoint as well
-                val theRest = try {
-                    Jsoup.connect("https://bandcamp.com/api/fancollection/1/collection_items")
-                            .ignoreContentType(true)
-                            .timeout(timeout)
-                            .cookies(cookies)
-                            .requestBody("{\"fan_id\": $fanId, \"older_than_token\": \"$lastToken\"}")
-                            .post()
-                } catch (e: HttpStatusException) {
+            // Get collection page with cookies, hence with download links
+            val doc = try {
+                Jsoup.connect("https://bandcamp.com/$bandcampUser")
+                        .timeout(timeout)
+                        .cookies(cookies)
+                        .get()
+            } catch (e: HttpStatusException) {
+                if (e.statusCode == 404) {
+                    throw BandCampDownloaderError("The bandcamp user '$bandcampUser' does not exist.")
+                } else {
                     throw e
                 }
-
-                val parsedCollectionData = gson.fromJson(theRest.wholeText(), ParsedCollectionItems::class.java)
-                collection.putAll(parsedCollectionData.redownload_urls)
-
-                lastToken = parsedCollectionData.last_token
-                moreAvailable = parsedCollectionData.more_available
             }
+
+            // Get download pages
+            val downloadPageJson = doc.select("#pagedata").attr("data-blob")
+            val fanPageBlob = gson.fromJson(downloadPageJson, ParsedFanpageData::class.java)
+
+            val collection = fanPageBlob.collection_data.redownload_urls.toMutableMap()
+
+            if (collection.isEmpty()) {
+                throw BandCampDownloaderError("No download links could by found in the collection page. This can be caused by an outdated or invalid cookies file.")
+            }
+
+            // Get the rest of the collection
+            if (fanPageBlob.collection_data.item_count > fanPageBlob.collection_data.batch_size) {
+                val fanId = fanPageBlob.fan_data.fan_id
+                var lastToken = fanPageBlob.collection_data.last_token
+                var moreAvailable = true
+                while (moreAvailable) {
+                    // Append download pages from this api endpoint as well
+                    val theRest = try {
+                        Jsoup.connect("https://bandcamp.com/api/fancollection/1/collection_items")
+                                .ignoreContentType(true)
+                                .timeout(timeout)
+                                .cookies(cookies)
+                                .requestBody("{\"fan_id\": $fanId, \"older_than_token\": \"$lastToken\"}")
+                                .post()
+                    } catch (e: HttpStatusException) {
+                        throw e
+                    }
+
+                    val parsedCollectionData = gson.fromJson(theRest.wholeText(), ParsedCollectionItems::class.java)
+                    collection.putAll(parsedCollectionData.redownload_urls)
+
+                    lastToken = parsedCollectionData.last_token
+                    moreAvailable = parsedCollectionData.more_available
+                }
+            }
+
+            this.saleItemsIDs2saleItemsURLs.putAll(collection)
+            this.bandcampPageName = doc.title()
+            this.initialized = true
         }
-
-        this.saleItemIDs2saleItemURLs.putAll(collection)
-
-        return doc.title()
     }
 
+    fun getBandcampPageName(): String? {
+        init()
+        return bandcampPageName
+    }
 
     fun getAllSaleItemIDs(): Set<String> {
-        return saleItemIDs2saleItemURLs.keys
+        init()
+        return saleItemsIDs2saleItemsURLs.keys
     }
 
 
     fun getCoverURL(saleItemID: String): String {
+        init()
         val artid = this.retrieveDigitalItemData(saleItemID)!!.art_id
         return "https://f4.bcbits.com/img/a${artid}_10"
     }
 
     fun retrieveDigitalItemData(saleItemID: String): DigitalItem? {
+        init()
 
-        if (!this.saleItemIDs2digitalItems.containsKey(saleItemID)) {
+        if (!this.saleItemsIDs2digitalItems.containsKey(saleItemID)) {
 
-            val saleItemURL = this.saleItemIDs2saleItemURLs[saleItemID]
+            val saleItemURL = this.saleItemsIDs2saleItemsURLs[saleItemID]
 
             // Get page content
             try {
@@ -136,25 +149,26 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
                 // Get data blob
                 val downloadPageJson = downloadPage.select("#pagedata").attr("data-blob")
                 val data = gson.fromJson(downloadPageJson, ParsedBandcampData::class.java)
-                this.saleItemIDs2digitalItems[saleItemID] = data.digital_items[0]
+                this.saleItemsIDs2digitalItems[saleItemID] = data.digital_items[0]
 
             } catch (e: HttpStatusException) {
 
                 // If 404, then the download page is not usable anymore for some reason (eg. a refund was given for the purchase)
                 if (e.statusCode == 404)
-                    this.saleItemIDs2digitalItems[saleItemID] = null
+                    this.saleItemsIDs2digitalItems[saleItemID] = null
                 else
                     throw e
             }
 
         }
 
-        return this.saleItemIDs2digitalItems[saleItemID]
+        return this.saleItemsIDs2digitalItems[saleItemID]
     }
 
 
+    fun retrieveRealDownloadURL(saleItemID: String, audioFormat: String): String? {
+        init()
 
-    fun retrieveRealDownloadURL(saleItemID: String, audioFormat: String) : String?{
         val digitalItem = this.retrieveDigitalItemData(saleItemID)
         val downloadUrl = digitalItem!!.downloads[audioFormat]?.get("url").orEmpty()
 
