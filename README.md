@@ -24,7 +24,7 @@ Usage: <main class> [-eh] [-c=<pathToCookiesFile>] [-d=<pathToDownloadFolder>] [
                             Possible values: flac, wav, aac-hi, mp3-320, aiff-lossless, vorbis, mp3-v0, alac.
   -h, --help                Display this help message.
   -j, --jobs=<jobs>         Amount of parallel jobs (threads) to use (default: 4).
-  -r, --retries=<retries>   Amount of retries when downloading a release (default: 3).
+  -r, --retries=<retries>   Amount of retries for each HTTP connection (default: 3).
   -t, --timeout=<timeout>   Timeout in ms before giving up an HTTP connection (default: 50000).
 ```
 
