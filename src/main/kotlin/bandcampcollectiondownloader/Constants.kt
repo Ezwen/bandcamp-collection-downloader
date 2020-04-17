@@ -2,6 +2,6 @@ package bandcampcollectiondownloader
 
 object Constants {
 
-    val LINESIZE: Int = 130
-
+    const val LINESIZE: Int = 130
+    const val VERSION: String = "v2020-04-17"
 }

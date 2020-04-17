@@ -1,0 +1,7 @@
+= Changelog
+
+== v2020-04-17
+
+First official release of bandcamp-collection-downloader! 🎉
+
+Highlights: much clearer textual output, multithreaded downloads, and faster detection of already downloaded albums.

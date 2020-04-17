@@ -19,6 +19,12 @@ fun main(args: Array<String>) {
                 return
             }
 
+    // If --version, then only shows version and quit
+    if (parsedArgs.version) {
+        println(Constants.VERSION)
+        return
+    }
+
     // If --help, then only show help and quit
     if (parsedArgs.help) {
         CommandLine.usage(Args(), System.out)

@@ -34,6 +34,9 @@ data class Args(
         var ignoreFailedReleases: Boolean = false,
 
         @CommandLine.Option(names = ["-j", "--jobs"], usageHelp = false, description = ["Amount of parallel jobs (threads) to use (default: 4)."])
-        var jobs: Int = 4
+        var jobs: Int = 4,
+
+        @CommandLine.Option(names = ["-v", "--version"], versionHelp = true, description = ["Display the version and exits."])
+        var version: Boolean = false
 
 )

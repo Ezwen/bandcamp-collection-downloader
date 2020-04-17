@@ -17,7 +17,7 @@ object Util {
 
     private const val BUFFER_SIZE = 4096
 
-    val parallelDownloadsProgresses: MutableMap<String, String> = ConcurrentHashMap()
+    private val parallelDownloadsProgresses: MutableMap<String, String> = ConcurrentHashMap()
 
     /**
      * From http://www.codejava.net/java-se/networking/use-httpurlconnection-to-download-file-from-an-http-url
