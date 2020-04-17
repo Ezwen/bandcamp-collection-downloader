@@ -55,7 +55,7 @@ object BandcampCollectionDownloader {
 
         // Connect to bandcamp
         Util.log("Connecting to Bandcamp…")
-        val connector = BandcampAPIConnector(args.bandcampUser, cookies.content, args.timeout)
+        val connector = BandcampAPIConnector(args.bandcampUser, cookies.content, args.timeout, args.retries)
         connector.init()
         val pageName = connector.getBandcampPageName()
         Util.log("""Found "$pageName" with ${connector.getAllSaleItemIDs().size} items.""")
@@ -75,8 +75,8 @@ object BandcampCollectionDownloader {
         Util.logSeparator()
 
         // Prepare for parallel downloads
-        val queue = ArrayBlockingQueue<Runnable>(100)
-        val threadPoolExecutor = ThreadPoolExecutor(args.jobs, args.jobs, 1, TimeUnit.HOURS, queue)
+        val queue = ArrayBlockingQueue<Runnable>(50000)
+        val threadPoolExecutor = ThreadPoolExecutor(args.jobs, args.jobs, 0, TimeUnit.HOURS, queue)
 
         // For each release of the bandcamp account that is yet to be downloaded
         for (saleItemID in itemsToDownload) {
@@ -95,6 +95,9 @@ object BandcampCollectionDownloader {
                 task.run()
             }
         }
+
+        // To make sure we quit once all is done
+        threadPoolExecutor.shutdown()
     }
 
     private fun manageDownloadPage(connector: BandcampAPIConnector, saleItemId: String, args: Args, cache: Cache) {
@@ -108,6 +111,7 @@ object BandcampCollectionDownloader {
             return
         }
 
+        // Get data (1)
         var releasetitle = digitalItem.title
         var artist = digitalItem.artist
         Util.log("""Found release "${digitalItem.title}" from ${digitalItem.artist}.""")
@@ -120,12 +124,14 @@ object BandcampCollectionDownloader {
             return
         }
 
+        // Get data (2)
         val releaseDate = digitalItem.package_release_date
         val releaseYear = releaseDate.subSequence(7, 11)
         val isSingleTrack: Boolean = digitalItem.download_type == "t"
 
-        val downloadUrl = connector.retrieveRealDownloadURL(saleItemId, args.audioFormat)
-                ?: throw BandCampDownloaderError("No URL found (is the download format correct?)")// digitalItem.downloads[args.audioFormat]?.get("url").orEmpty()
+        // Exit if no download URL can be found with the chosen audio format
+        connector.retrieveRealDownloadURL(saleItemId, args.audioFormat)
+                ?: throw BandCampDownloaderError("No URL found (is the download format correct?)")
 
         // Replace invalid chars by similar unicode chars
         releasetitle = Util.replaceInvalidCharsByUnicode(releasetitle)
@@ -135,39 +141,22 @@ object BandcampCollectionDownloader {
         val releaseFolderName = "$releaseYear - $releasetitle"
         val artistFolderPath = Paths.get("${args.pathToDownloadFolder}").resolve(artist)
         val releaseFolderPath = artistFolderPath.resolve(releaseFolderName)
-
         val coverURL = connector.getCoverURL(saleItemId)
 
         // Download release, with as many retries as configured
-        val attempts = args.retries + 1
-        for (i in 1..attempts) {
-            if (i > 1) {
-                Util.log("Retrying download (${i - 1}/${args.retries}).")
-                sleep(1000)
+        Util.retry({
+            val downloadUrl = connector.retrieveRealDownloadURL(saleItemId, args.audioFormat)!!
+            val downloaded = downloadRelease(downloadUrl, artistFolderPath, releaseFolderPath, isSingleTrack, args.timeout, coverURL)
+            if (downloaded) {
+                Util.log("done.")
+            } else {
+                Util.log("Release already exists on disk, skipping.")
             }
-            try {
-                val downloaded = downloadRelease(downloadUrl, artistFolderPath, releaseFolderPath, isSingleTrack, args.timeout, coverURL)
+            if (saleItemId !in cache.getContent()) {
+                cache.add(saleItemId)
+            }
+        }, args.retries, args.ignoreFailedReleases)
 
-                if (downloaded) {
-                    Util.log("done.")
-                } else {
-                    Util.log("Release already exists on disk, skipping.")
-                }
-                if (saleItemId !in cache.getContent()) {
-                    cache.add(saleItemId)
-                }
-                break
-            } catch (e: Throwable) {
-                Util.log("""Error while downloading: "${e.javaClass.name}: ${e.message}".""")
-                if (i == attempts) {
-                    if (args.ignoreFailedReleases) {
-                        Util.log("Could not download release after ${args.retries} retries.")
-                    } else {
-                        throw BandCampDownloaderError("Could not download release after ${args.retries} retries.")
-                    }
-                }
-            }
-        }
     }
 
 

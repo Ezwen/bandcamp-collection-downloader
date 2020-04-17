@@ -6,7 +6,7 @@ import picocli.CommandLine
 fun main(args: Array<String>) {
 
     // Parsing args
-    System.setProperty("picocli.usage.width", "130")
+    System.setProperty("picocli.usage.width", Constants.LINESIZE.toString())
     val parsedArgs: Args =
             try {
                 CommandLine.populateCommand(Args(), *args)
