@@ -1,7 +1,6 @@
 package bandcampcollectiondownloader
 
 import org.zeroturnaround.zip.ZipUtil
-import java.lang.Thread.sleep
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -114,13 +113,14 @@ object BandcampCollectionDownloader {
         // Get data (1)
         var releasetitle = digitalItem.title
         var artist = digitalItem.artist
-        Util.log("""Found release "${digitalItem.title}" from ${digitalItem.artist}.""")
+        val printableReleaseName = """"${digitalItem.title}" by ${digitalItem.artist}"""
+        Util.log("""Found release $printableReleaseName.""")
 
         // Skip preorders
         val dateFormatter = DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd MMM yyyy HH:mm:ss zzz").toFormatter(Locale.ENGLISH)
         val releaseUTC = ZonedDateTime.parse(digitalItem.package_release_date, dateFormatter).toInstant()
         if (releaseUTC > Instant.now()) {
-            Util.log("Sale Item ID $saleItemId ($artist − $releasetitle) is a preorder; skipping")
+            Util.log("$printableReleaseName is a preorder; skipping for now.")
             return
         }
 
@@ -143,14 +143,16 @@ object BandcampCollectionDownloader {
         val releaseFolderPath = artistFolderPath.resolve(releaseFolderName)
         val coverURL = connector.getCoverURL(saleItemId)
 
+        Util.log("Starting the download of $printableReleaseName.")
+
         // Download release, with as many retries as configured
         Util.retry({
             val downloadUrl = connector.retrieveRealDownloadURL(saleItemId, args.audioFormat)!!
             val downloaded = downloadRelease(downloadUrl, artistFolderPath, releaseFolderPath, isSingleTrack, args.timeout, coverURL)
             if (downloaded) {
-                Util.log("done.")
+                Util.log("$printableReleaseName successfully downloaded.")
             } else {
-                Util.log("Release already exists on disk, skipping.")
+                Util.log("$printableReleaseName already exists on disk, skipping.")
             }
             if (saleItemId !in cache.getContent()) {
                 cache.add(saleItemId)

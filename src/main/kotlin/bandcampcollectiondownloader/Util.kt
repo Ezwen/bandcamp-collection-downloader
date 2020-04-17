@@ -24,8 +24,6 @@ object Util {
      */
     fun downloadFile(fileURL: String, saveDir: Path, optionalFileName: String = "", timeout: Int): Path {
 
-        log("Downloading $fileURL…")
-
         // Prepare HTTP connection
         val url = URL(fileURL)
         val httpConn = url.openConnection() as HttpURLConnection
@@ -131,7 +129,7 @@ object Util {
         return result
     }
 
-    fun fillWithBlanks(message: String): String {
+    private fun fillWithBlanks(message: String): String {
         return message + " ".repeat((Constants.LINESIZE - message.length).coerceAtLeast(0))
     }
 
