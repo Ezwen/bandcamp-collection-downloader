@@ -116,17 +116,23 @@ object BandcampCollectionDownloader {
         val printableReleaseName = """"${digitalItem.title}" by ${digitalItem.artist}"""
         Util.log("""Found release $printableReleaseName.""")
 
-        // Skip preorders
-        val dateFormatter = DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd MMM yyyy HH:mm:ss zzz").toFormatter(Locale.ENGLISH)
-        val releaseUTC = ZonedDateTime.parse(digitalItem.package_release_date, dateFormatter).toInstant()
-        if (releaseUTC > Instant.now()) {
-            Util.log("$printableReleaseName is a preorder; skipping for now.")
-            return
-        }
-
-        // Get data (2)
+        // Handle null release dates
         val releaseDate = digitalItem.package_release_date
-        val releaseYear = releaseDate.subSequence(7, 11)
+        var releaseYear = "unknown" as CharSequence
+
+        if (releaseDate != null) {
+            releaseYear = releaseDate.subSequence(7, 11)
+
+            // Skip preorders
+            val dateFormatter = DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd MMM yyyy HH:mm:ss zzz").toFormatter(Locale.ENGLISH)
+            val releaseUTC = ZonedDateTime.parse(digitalItem.package_release_date, dateFormatter).toInstant()
+            if (releaseUTC > Instant.now()) {
+                Util.log("$printableReleaseName is a preorder; skipping for now.")
+                return
+            }
+        }        
+        
+        // Get data (2)
         val isSingleTrack: Boolean = digitalItem.download_type == "t"
 
         // Exit if no download URL can be found with the chosen audio format
