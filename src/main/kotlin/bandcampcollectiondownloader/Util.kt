@@ -123,9 +123,9 @@ object Util {
 
     fun replaceInvalidCharsByUnicode(s: String): String {
         var result: String = s
-        result = result.replace(':', '꞉')
-        result = result.replace('/', '／')
-        result = result.replace('\\', '⧹')
+        for ((old, new) in Constants.UNICODE_CHARS_REPLACEMENTS) {
+            result = result.replace(old, new)
+        }
         return result
     }
 
