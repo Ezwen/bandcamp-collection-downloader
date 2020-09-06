@@ -174,8 +174,15 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
         init()
 
         val digitalItem = this.retrieveDigitalItemData(saleItemID)
+
+        // Some releases have no digital items (eg. vinyl only)
+        if (digitalItem == null) {
+            return null
+        }
+
         val downloadUrl = digitalItem!!.downloads[audioFormat]?.get("url").orEmpty()
 
+        // Some digital items have no urls
         if (downloadUrl.isEmpty()) {
             return null
         }

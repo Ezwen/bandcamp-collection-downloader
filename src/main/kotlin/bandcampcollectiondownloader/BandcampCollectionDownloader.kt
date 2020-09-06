@@ -84,7 +84,12 @@ object BandcampCollectionDownloader {
             val task = Runnable {
                 val itemNumber = itemsToDownload.indexOf(saleItemID) + 1
                 Util.log("Managing item $itemNumber/${itemsToDownload.size}")
-                manageDownloadPage(connector, saleItemID, args, cache)
+
+                try {
+                    manageDownloadPage(connector, saleItemID, args, cache)
+                } catch (e : BandCampDownloaderError) {
+                    Util.log("Could not download item: " + e.message)
+                }
             }
 
             // Use threads only if j is more than 1
@@ -131,7 +136,7 @@ object BandcampCollectionDownloader {
 
         // Exit if no download URL can be found with the chosen audio format
         connector.retrieveRealDownloadURL(saleItemId, args.audioFormat)
-                ?: throw BandCampDownloaderError("No URL found (is the download format correct?)")
+                ?: throw BandCampDownloaderError("No URL found for item (maybe the release has no digital item, or the provided download format is invalid)")
 
         // Replace invalid chars by similar unicode chars
         releasetitle = Util.replaceInvalidCharsByUnicode(releasetitle)
