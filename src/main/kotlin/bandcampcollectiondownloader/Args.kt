@@ -10,13 +10,11 @@ data class Args(
         var bandcampUser: String = "",
 
         @CommandLine.Option(names = ["--cookies-file", "-c"], required = false,
-                description = ["A JSON or txt file with valid bandcamp credential cookies.",
-                            """"Cookie Quick Manager" can be used to obtain a JSON file after logging into bandcamp.""",
-                            "(visit https://addons.mozilla.org/en-US/firefox/addon/cookie-quick-manager/)",
-                            """"or the "cookies.txt" extension"""",
-                            "(https://chrome.google.com/webstore/detail/cookiestxt/njabckikapfpffapmjgojcnbfjonfjfg?hl=en)",
-                            "can be used to obtain a cookies.txt file on Chrome.",
-                            "If no cookies file is provided, cookies from the local Firefox installation are used (Windows and Linux) only)."])
+                description = [
+                  "A file containing valid bandcamp credential cookies.",
+                  """The file must either be obtained using the Firefox extension "Cookie Quick Manager" (https://addons.mozilla.org/en-US/firefox/addon/cookie-quick-manager/) or using the Chrome extension "cookies.txt" (https://chrome.google.com/webstore/detail/cookiestxt/njabckikapfpffapmjgojcnbfjonfjfg).""",
+                  "If no cookies file is provided, cookies from the local Firefox installation are used (Windows and Linux)."
+                ])
         var pathToCookiesFile: Path? = null,
 
         @CommandLine.Option(names = ["--audio-format", "-f"], required = false,
