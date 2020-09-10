@@ -12,6 +12,21 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.time.Instant
 
+fun parseCookiesText(fileData: String): Map<String, String> {
+    val lines = fileData.split('\n')
+    val result = java.util.HashMap<String, String>()
+    lines.forEach {
+        if (!it.startsWith('#')) {
+            val columns = it.split('\t').toTypedArray()
+            if (columns.size == 7) {
+                result[columns[5]] = columns[6]
+            }
+        }
+    }
+    return result
+}
+
+
 object CookiesManagement {
 
     private val gson = Gson()
@@ -49,14 +64,16 @@ object CookiesManagement {
         if (!Files.exists(cookiesFile)) {
             throw BandCampDownloaderError("Cookies file '$cookiesFile' cannot be found.")
         }
-        val jsonData = String(Files.readAllBytes(cookiesFile))
+        val fileData = String(Files.readAllBytes(cookiesFile))
         val parsedCookies =
                 try {
-                    gson.fromJson(jsonData, Array<ParsedCookie>::class.java)
+                    if (cookiesFile.toString().endsWith(".json"))
+                          parsedCookiesToMap(gson.fromJson(fileData, Array<ParsedCookie>::class.java))  else
+                          parseCookiesText(fileData)
                 } catch (e: JsonSyntaxException) {
                     throw BandCampDownloaderError("Cookies file '$cookiesFile' is not well formed: ${e.message}")
                 }
-        return Cookies(cookiesFile, parsedCookiesToMap(parsedCookies))
+        return Cookies(cookiesFile, parsedCookies)
     }
 
     fun retrieveFirefoxCookies(): Cookies {
