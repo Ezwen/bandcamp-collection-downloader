@@ -7,6 +7,7 @@ import java.nio.file.Paths
 import java.time.Instant
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatterBuilder
+import java.time.temporal.ChronoField
 import java.util.*
 import java.util.concurrent.*
 
@@ -87,7 +88,7 @@ object BandcampCollectionDownloader {
 
                 try {
                     manageDownloadPage(connector, saleItemID, args, cache)
-                } catch (e : BandCampDownloaderError) {
+                } catch (e: BandCampDownloaderError) {
                     Util.log("Could not download item: " + e.message)
                 }
             }
@@ -103,6 +104,7 @@ object BandcampCollectionDownloader {
         // To make sure we quit once all is done
         threadPoolExecutor.shutdown()
     }
+
     private fun manageDownloadPage(connector: BandcampAPIConnector, saleItemId: String, args: Args, cache: Cache) {
 
         val digitalItem = connector.retrieveDigitalItemData(saleItemId)
@@ -117,27 +119,27 @@ object BandcampCollectionDownloader {
         // Get data (1)
         var releasetitle = digitalItem.title
         var artist = digitalItem.artist
-        val printableReleaseName = """"${digitalItem.title}" by ${digitalItem.artist}"""
-        Util.log("""Found release $printableReleaseName (Bandcamp ID: $saleItemId) """)
+        var releaseUTC : ZonedDateTime? = null
+        var releaseYear: CharSequence = "0000"
 
         // Skip preorders
         val dateFormatter = DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd MMM yyyy HH:mm:ss zzz").toFormatter(Locale.ENGLISH)
-        Util.log(""" Release date (Unformatted): ${digitalItem.package_release_date}  """)
-		if (digitalItem.package_release_date != null ) {
-            val releaseUTC = ZonedDateTime.parse(digitalItem.package_release_date, dateFormatter).toInstant()
-            Util.log(""" Release date: $releaseUTC """)
-            if (releaseUTC > Instant.now()) {
-                Util.log("$printableReleaseName is a preorder; skipping for now.")
-                return
-            }
+
+        if (digitalItem.package_release_date != null) {
+            releaseUTC = ZonedDateTime.parse(digitalItem.package_release_date, dateFormatter)
+            releaseYear = releaseUTC.get(ChronoField.YEAR).toString()
+        }
+
+        var printableReleaseName = """"${digitalItem.title}" ($releaseYear) by ${digitalItem.artist}"""
+
+        Util.log("""Found release $printableReleaseName (Bandcamp ID: $saleItemId).""")
+
+        if (releaseUTC != null && releaseUTC.toInstant() > Instant.now()) {
+            Util.log("$printableReleaseName is a preorder; skipping.")
+            return
         }
 
         // Get data (2)
-        val releaseDate = digitalItem.package_release_date
-        var releaseYear:CharSequence = "0000"
-		if (releaseDate != null) {		
-            releaseYear = releaseDate.subSequence(7, 11)
-        }
         val isSingleTrack: Boolean = digitalItem.download_type == "t"
 
         // Exit if no download URL can be found with the chosen audio format
