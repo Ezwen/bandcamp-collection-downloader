@@ -44,7 +44,7 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
 
     data class DigitalItem(
             val downloads: Map<String, Map<String, String>>,
-            val package_release_date: String,
+            val package_release_date: String?,
             val title: String,
             val artist: String,
             val download_type: String,
