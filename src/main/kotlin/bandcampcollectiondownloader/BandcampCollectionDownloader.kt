@@ -130,7 +130,7 @@ object BandcampCollectionDownloader {
             releaseYear = releaseUTC.get(ChronoField.YEAR).toString()
         }
 
-        var printableReleaseName = """"${digitalItem.title}" ($releaseYear) by ${digitalItem.artist}"""
+        val printableReleaseName = """"${digitalItem.title}" ($releaseYear) by ${digitalItem.artist}"""
 
         Util.log("""Found release $printableReleaseName (Bandcamp ID: $saleItemId).""")
 
