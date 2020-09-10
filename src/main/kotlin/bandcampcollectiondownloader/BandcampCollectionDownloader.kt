@@ -103,7 +103,6 @@ object BandcampCollectionDownloader {
         // To make sure we quit once all is done
         threadPoolExecutor.shutdown()
     }
-
     private fun manageDownloadPage(connector: BandcampAPIConnector, saleItemId: String, args: Args, cache: Cache) {
 
         val digitalItem = connector.retrieveDigitalItemData(saleItemId)
@@ -119,19 +118,26 @@ object BandcampCollectionDownloader {
         var releasetitle = digitalItem.title
         var artist = digitalItem.artist
         val printableReleaseName = """"${digitalItem.title}" by ${digitalItem.artist}"""
-        Util.log("""Found release $printableReleaseName.""")
+        Util.log("""Found release $printableReleaseName (Bandcamp ID: $saleItemId) """)
 
         // Skip preorders
         val dateFormatter = DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd MMM yyyy HH:mm:ss zzz").toFormatter(Locale.ENGLISH)
-        val releaseUTC = ZonedDateTime.parse(digitalItem.package_release_date, dateFormatter).toInstant()
-        if (releaseUTC > Instant.now()) {
-            Util.log("$printableReleaseName is a preorder; skipping for now.")
-            return
+        Util.log(""" Release date (Unformatted): ${digitalItem.package_release_date}  """)
+		if (digitalItem.package_release_date != null ) {
+            val releaseUTC = ZonedDateTime.parse(digitalItem.package_release_date, dateFormatter).toInstant()
+            Util.log(""" Release date: $releaseUTC """)
+            if (releaseUTC > Instant.now()) {
+                Util.log("$printableReleaseName is a preorder; skipping for now.")
+                return
+            }
         }
 
         // Get data (2)
         val releaseDate = digitalItem.package_release_date
-        val releaseYear = releaseDate.subSequence(7, 11)
+        var releaseYear:CharSequence = "0000"
+		if (releaseDate != null) {		
+            releaseYear = releaseDate.subSequence(7, 11)
+        }
         val isSingleTrack: Boolean = digitalItem.download_type == "t"
 
         // Exit if no download URL can be found with the chosen audio format
