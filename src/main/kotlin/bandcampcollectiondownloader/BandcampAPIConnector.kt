@@ -1,6 +1,7 @@
 package bandcampcollectiondownloader
 
 import com.google.gson.Gson
+import org.jsoup.Connection.Method
 import org.jsoup.HttpStatusException
 import org.jsoup.Jsoup
 import java.util.*
@@ -99,12 +100,12 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
                                         .ignoreContentType(true)
                                         .timeout(timeout)
                                         .cookies(cookies)
+                                        .method(Method.POST)
                                         .requestBody("{\"fan_id\": $fanId, \"older_than_token\": \"$lastToken\"}")
-                                        .post()
+                                        .execute()
                             }, retries)
 
-
-                    val parsedCollectionData = gson.fromJson(theRest!!.wholeText(), ParsedCollectionItems::class.java)
+                    val parsedCollectionData = gson.fromJson(theRest!!.body(), ParsedCollectionItems::class.java)
                     collection.putAll(parsedCollectionData.redownload_urls)
 
                     lastToken = parsedCollectionData.last_token
