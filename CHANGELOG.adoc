@@ -1,7 +1,22 @@
 = Changelog
 
+== v2020-09-20
+
+- Switch to JDK 11
+- Can handle many more special characters in the release artist or title.
+- Skip if no digital item or no download url found.
+- Use default release year (0000) when the item has none for some reason.
+- Add cookies.txt parser (which means Chrome users can now use the tool!)
+- Fix a JSON parse error occuring with strangely written release titles.
+
+*External contributors*: thank you to Colin Diesh, CoryAlbrecht, jeyalee! 🍻
+
+
 == v2020-04-17
 
 First official release of bandcamp-collection-downloader! 🎉
 
-Highlights: much clearer textual output, multithreaded downloads, and faster detection of already downloaded albums.
+*Highlights*: much clearer textual output, multithreaded downloads, and faster detection of already downloaded albums.
+
+*External contributors*: thank you to barbeque-squared! 🍻
+
