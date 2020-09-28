@@ -39,26 +39,44 @@ object BandcampCollectionDownloader {
         Util.log("Target audio format: " + args.audioFormat)
         Util.logSeparator()
 
-        val cookies =
+        // Gather cookies
+        val cookiesCandidates : MutableList<CookiesManagement.Cookies> = ArrayList<CookiesManagement.Cookies>()
+        if (args.pathToCookiesFile != null) {
+            // Parse JSON cookies (obtained with "Cookie Quick Manager" Firefox addon)
+            Util.log("Loading provided cookies file…")
+            cookiesCandidates.add(CookiesManagement.retrieveCookiesFromFile(args.pathToCookiesFile!!))
+        } else {
+            // Try to find cookies stored in default firefox profile
+            Util.log("No provided cookies file, using Firefox cookies…")
+            cookiesCandidates.addAll(CookiesManagement.retrieveFirefoxCookies())
+        }
 
-                if (args.pathToCookiesFile != null) {
-                    // Parse JSON cookies (obtained with "Cookie Quick Manager" Firefox addon)
-                    Util.log("Loading provided cookies file…")
-                    CookiesManagement.retrieveCookiesFromFile(args.pathToCookiesFile!!)
-                } else {
-                    // Try to find cookies stored in default firefox profile
-                    Util.log("No provided cookies file, using Firefox cookies…")
-                    CookiesManagement.retrieveFirefoxCookies()
-                }
-        Util.log("Loaded cookies from: " + cookies.source)
-        Util.logSeparator()
+        // Try to connect to bandcamp with each provided cookies
+        var connector : BandcampAPIConnector? = null
+        for (cookies in cookiesCandidates) {
+            try {
+                Util.log("Trying cookies from: " + cookies.source)
+                Util.logSeparator()
 
-        // Connect to bandcamp
-        Util.log("Connecting to Bandcamp…")
-        val connector = BandcampAPIConnector(args.bandcampUser, cookies.content, args.timeout, args.retries)
-        connector.init()
-        val pageName = connector.getBandcampPageName()
-        Util.log("""Found "$pageName" with ${connector.getAllSaleItemIDs().size} items.""")
+                // Try to connect to bandcamp with the cookies
+                Util.log("Connecting to Bandcamp…")
+                val candidateConnector = BandcampAPIConnector(args.bandcampUser, cookies.content, args.timeout, args.retries)
+                candidateConnector.init()
+                val pageName = candidateConnector.getBandcampPageName()
+                Util.log("""Found "$pageName" with ${candidateConnector.getAllSaleItemIDs().size} items.""")
+
+                // If we reach this point then the cookies worked and we have a working connection
+                connector = candidateConnector
+                break
+
+            } catch (e:Throwable) {
+                Util.log("""Cookies from ${cookies.source} did not work.""")
+            }
+        }
+
+        if (connector == null) {
+            throw BandCampDownloaderError("Could not connect to the Bandcamp API with the provided cookies.")
+        }
 
         // Prepare/load cache file
         val cacheFilePath = args.pathToDownloadFolder.resolve("bandcamp-collection-downloader.cache")
@@ -144,7 +162,7 @@ object BandcampCollectionDownloader {
 
         // Exit if no download URL can be found with the chosen audio format
         connector.retrieveRealDownloadURL(saleItemId, args.audioFormat)
-                ?: throw BandCampDownloaderError("No URL found for item (maybe the release has no digital item, or the provided download format is invalid)")
+            ?: throw BandCampDownloaderError("No URL found for item (maybe the release has no digital item, or the provided download format is invalid)")
 
         // Replace invalid chars by similar unicode chars
         releasetitle = Util.replaceInvalidCharsByUnicode(releasetitle)
