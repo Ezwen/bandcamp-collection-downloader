@@ -37,6 +37,10 @@ data class Args(
         @CommandLine.Option(names = ["-e", "--skip-failed-releases"], description = ["Skip releases that fail to download after the specified number of retries."])
         var ignoreFailedReleases: Boolean = false,
 
+        @CommandLine.Option(names = ["-b", "--use-band-name"], description = ["save Releases sorted by band name instead of artist"])
+        var useBandName: Boolean = false,
+
+
         @CommandLine.Option(names = ["-j", "--jobs"], usageHelp = false, description = ["Amount of parallel jobs (threads) to use (default: 4)."])
         var jobs: Int = 4,
 
