@@ -143,6 +143,18 @@ class BandcampCollectionDownloader(private val args: Args, private val io: IO) {
             return
         }
 
+        // Filter by Artist
+        if (args.filterArtist != null && digitalItem.artist != args.filterArtist) {
+            cache.add(saleItemId)
+            return
+        }
+
+        // Filter by Title
+        if (args.filterTitle != null && digitalItem.title != args.filterTitle) {
+            cache.add(saleItemId)
+            return
+        }
+
         // Get data (1)
         var releasetitle = digitalItem.title
         var artist = digitalItem.artist
@@ -165,6 +177,20 @@ class BandcampCollectionDownloader(private val args: Args, private val io: IO) {
         if (releaseUTC != null && releaseUTC.toInstant() > Instant.now()) {
             Util.log("$printableReleaseName is a preorder; skipping.")
             return
+        }
+
+        // Filter by Date
+        if (args.filterDate != null) {
+            try {
+                LocalDate filterDate = LocalDate.now();
+                Instant filterInstant = date.atStartOfDay(ZoneId.systemDefault()).toInstant();
+
+                if (releaseUTC != null && releaseUTC.toInstant().isAfter(filterInstant)) {
+                    return
+                }
+            } catch(DateTimeParseException e) {
+                Util.log("could not parse filterDate")
+            }
         }
 
         // Get data (2)
