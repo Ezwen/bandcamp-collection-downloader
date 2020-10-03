@@ -146,8 +146,9 @@ class BandcampCollectionDownloader(private val args: Args, private val io: IO) {
         // Get data (1)
         var releasetitle = digitalItem.title
         var artist = digitalItem.artist
-        var releaseUTC: ZonedDateTime? = null
         var bandName = digitalItem.band_name;
+
+        var releaseUTC : ZonedDateTime? = null
         var releaseYear: CharSequence = "0000"
 
         // Skip preorders
