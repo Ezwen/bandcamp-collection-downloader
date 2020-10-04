@@ -6,8 +6,11 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZonedDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatterBuilder
+import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoField
 import java.util.*
 import java.util.concurrent.*
@@ -182,13 +185,13 @@ class BandcampCollectionDownloader(private val args: Args, private val io: IO) {
         // Filter by Date
         if (args.filterDate != null) {
             try {
-                LocalDate filterDate = LocalDate.now();
-                Instant filterInstant = date.atStartOfDay(ZoneId.systemDefault()).toInstant();
-
+                val filterDate: LocalDate = LocalDate.now();
+                val filterInstant: Instant = filterDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
+            
                 if (releaseUTC != null && releaseUTC.toInstant().isAfter(filterInstant)) {
                     return
                 }
-            } catch(DateTimeParseException e) {
+            } catch(e: DateTimeParseException) {
                 Util.log("could not parse filterDate")
             }
         }
