@@ -20,6 +20,7 @@ git tag vXXXX
 ```
 +
 . Push everything to the remote git repository, including the new tag:
++
 ```
 git push --tags
 ```
