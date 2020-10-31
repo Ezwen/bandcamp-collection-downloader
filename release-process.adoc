@@ -1,0 +1,27 @@
+= Release process
+
+Everything is manual at the moment.
+
+. Make sure the git local repository is clean (ie. nothing listed with `git status`).
+. Change the following files:
+.. `CHANGELOG.adoc` with an added section (`==`) titled with the release number, with a list of novelties and with a list of contributors.
+.. `src/main/kotlin/bandcampcollectiondownloader/Constants.kt` with a new version number.
+. Make a commit with both files and with the new version number:
++
+```
+git add CHANGELOG.adoc src/main/kotlin/bandcampcollectiondownloader/Constants.kt
+git commit -m "Release vXXXX"
+```
++
+. Add a tag with the new version number:
++
+```
+git tag vXXXX
+```
++
+. Push everything to the remote git repository, including the new tag:
+```
+git push --tags
+```
+
+And done! 🎉
