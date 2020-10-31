@@ -1,5 +1,10 @@
 = Changelog
 
+== v2020-10-31 🎃
+
+- Can now use the new firefox's profile.ini file format.
+
+
 == v2020-09-20
 
 - Switch to JDK 11
