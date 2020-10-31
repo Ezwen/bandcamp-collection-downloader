@@ -8,3 +8,8 @@ out
 .idea
 build
 bin
+.classpath
+.project
+.settings
+.vscode
+trash
