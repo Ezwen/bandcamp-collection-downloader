@@ -174,19 +174,11 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
     fun retrieveRealDownloadURL(saleItemID: String, audioFormat: String): String? {
         init()
 
-        val digitalItem = this.retrieveDigitalItemData(saleItemID)
-
-        // Some releases have no digital items (eg. vinyl only)
-        if (digitalItem == null) {
-            return null
-        }
-
-        val downloadUrl = digitalItem!!.downloads[audioFormat]?.get("url").orEmpty()
-
-        // Some digital items have no urls
-        if (downloadUrl.isEmpty()) {
-            return null
-        }
+        // Some releases have no digital items (eg. vinyl only) or no downloads or no urls, so we return null in such cases
+        val digitalItem = this.retrieveDigitalItemData(saleItemID) ?: return null
+        val downloads = digitalItem.downloads
+        val download = downloads[audioFormat] ?: return null
+        val downloadUrl = download?.get("url") ?: return null
 
         val random = Random()
 
