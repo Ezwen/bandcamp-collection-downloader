@@ -44,7 +44,7 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
     )
 
     data class DigitalItem(
-            val downloads: Map<String, Map<String, String>>,
+            val downloads: Map<String, Map<String, String>>?,
             val package_release_date: String?,
             val title: String,
             val artist: String,
@@ -176,9 +176,9 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
 
         // Some releases have no digital items (eg. vinyl only) or no downloads or no urls, so we return null in such cases
         val digitalItem = this.retrieveDigitalItemData(saleItemID) ?: return null
-        val downloads = digitalItem.downloads
+        val downloads = digitalItem.downloads ?: return null
         val download = downloads[audioFormat] ?: return null
-        val downloadUrl = download?.get("url") ?: return null
+        val downloadUrl = download["url"] ?: return null
 
         val random = Random()
 
