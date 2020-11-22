@@ -1,5 +1,10 @@
 = Changelog
 
+
+== ???
+
+- Fix `NullPointerException` when downloading releases without any digital item (e.g. vinyl only).
+
 == v2020-10-31 🎃
 
 - Can now use the new firefox's profile.ini file format.
