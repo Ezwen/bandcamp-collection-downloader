@@ -10,8 +10,10 @@ Everything is manual at the moment.
 +
 ```
 git add CHANGELOG.adoc src/main/kotlin/bandcampcollectiondownloader/Constants.kt
-git commit -m "Release vXXXX"
+git commit -m "Release vYYYY-MM-DD"
 ```
++
+where `YYYY-MM-DD` is the current date.
 // +
 // . Add a tag with the new version number:
 // +
