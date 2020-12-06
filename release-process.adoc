@@ -35,10 +35,10 @@ git push
 +
 +
 . Wait for the CI pipeline build to be done, then open the corresponding pipeline page, then open the `build` build page, then *press the _Keep_ button.*
-. Press `Browse` and navigate to the `.jar` file until you find the URL, and copy the URL. It should look like this:
+. Press `Browse` and navigate to the `.jar` file until you find the URL, and copy the URL (or replace `<Job ID>` in the URL below). It should look like this:
 +
 ```
-https://framagit.org/Ezwen/bandcamp-collection-downloader/-/jobs/1167524/artifacts/raw/build/libs/bandcamp-collection-downloader.jar?inline=false
+https://framagit.org/Ezwen/bandcamp-collection-downloader/-/jobs/<Job ID>/artifacts/raw/build/libs/bandcamp-collection-downloader.jar?inline=false
 ```
 +
 NOTE: Replacing the job ID in the URL above should work?
