@@ -1,7 +1,7 @@
 = Changelog
 
 
-== ???
+== v2020-12-06
 
 - Fix `NullPointerException` when downloading releases without any digital item (e.g. vinyl only).
 
