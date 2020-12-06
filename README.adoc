@@ -55,12 +55,18 @@ This will download all albums ever bought by the Bandcamp account _myBandcampIde
 
 After downloading the first album, it will create a `bandcamp-collection-downloader.cache` file in the chosen download folder. This allows the tool to remembers which albums have already been successfully downloaded, and thus prevents unnecessarily hitting the Bandcamp servers.
 
-=== Installation
+=== Installing and updating
 
 Releases are published on link:https://framagit.org/Ezwen/bandcamp-collection-downloader/-/releases[this page].
 
-Each release comes with an executable jar file that contains all required dependencies, and that can therefore be directly executed with a simple `java -jar` command.
-Look for the link named _Executable jar_ under each release description.
+Each release comes with an executable jar file named `bandcamp-collection-downloader.jar` that contains all required dependencies, and that can therefore be directly executed with a simple `java -jar` command.
+Look for the link named "_Executable jar_" under each release description.
+
+At the moment there it no official installation procedure: just put `bandcamp-collection-downloader.jar` wherever you want and execute it from anywhere you want.
+To install a newer version, simply replace your `bandcamp-collection-downloader.jar` file by the most recent version from the releases page.
+
+If you want to be notified of new releases, you can subscribe to link:https://framagit.org/Ezwen/bandcamp-collection-downloader/-/tags?format=atom[this Atom feed].
+
 
 === Compiling
 
