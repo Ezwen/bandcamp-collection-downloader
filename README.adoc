@@ -55,6 +55,13 @@ This will download all albums ever bought by the Bandcamp account _myBandcampIde
 
 After downloading the first album, it will create a `bandcamp-collection-downloader.cache` file in the chosen download folder. This allows the tool to remembers which albums have already been successfully downloaded, and thus prevents unnecessarily hitting the Bandcamp servers.
 
+=== Installation
+
+Releases are published on link:https://framagit.org/Ezwen/bandcamp-collection-downloader/-/releases[this page].
+
+Each release comes with an executable jar file that contains all required dependencies, and that can therefore be directly executed with a simple `java -jar` command.
+Look for the link named _Executable jar_ under each release description.
+
 === Compiling
 
 The tool is written in Kotlin and compilation is handled by Gradle. A Gradle task named `fatJar` is available to build a standalone executable jar with all dependencies:
