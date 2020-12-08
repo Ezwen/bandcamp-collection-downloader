@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.ChronoField
 import java.util.*
 import java.util.concurrent.*
+import java.util.stream.Collectors
 
 object BandcampCollectionDownloader {
 
@@ -169,14 +170,29 @@ object BandcampCollectionDownloader {
         artist = Util.replaceInvalidCharsByUnicode(artist)
 
         // Prepare artist and release folder
+        val downloadFolderPath = Paths.get("${args.pathToDownloadFolder}")
         val releaseFolderName = "$releaseYear - $releasetitle"
-        val artistFolderPath = Paths.get("${args.pathToDownloadFolder}").resolve(artist)
-        val releaseFolderPath = artistFolderPath.resolve(releaseFolderName)
+        var artistFolderPath = downloadFolderPath.resolve(artist)
+        var releaseFolderPath = artistFolderPath.resolve(releaseFolderName)
+
+        // If artist folder exists with different case, use it
+        val candidateArtistFolders = Files.list(downloadFolderPath).filter { f -> f.fileName.toString().toLowerCase().endsWith(artist.toLowerCase()) }.collect(
+            Collectors.toList())
+        if (candidateArtistFolders.isNotEmpty()) {
+            artistFolderPath = candidateArtistFolders[0]
+            // If release folder exists with different case, use it
+            val candidateReleaseFolders = Files.list(artistFolderPath).filter { f -> f.fileName.toString().toLowerCase().endsWith(releaseFolderName.toLowerCase()) }.collect(
+                Collectors.toList())
+            if (candidateReleaseFolders.isNotEmpty()) {
+                releaseFolderPath = candidateReleaseFolders[0]
+            }
+        }
+
+        // Find cover URL
         val coverURL = connector.getCoverURL(saleItemId)
 
-        Util.log("Starting the download of $printableReleaseName.")
-
         // Download release, with as many retries as configured
+        Util.log("Starting the download of $printableReleaseName.")
         Util.retry({
             val downloadUrl = connector.retrieveRealDownloadURL(saleItemId, args.audioFormat)!!
             val downloaded = downloadRelease(downloadUrl, artistFolderPath, releaseFolderPath, isSingleTrack, args.timeout, coverURL)
