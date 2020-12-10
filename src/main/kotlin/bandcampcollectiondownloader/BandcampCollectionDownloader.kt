@@ -182,7 +182,7 @@ object BandcampCollectionDownloader {
         var releaseFolderPath = artistFolderPath.resolve(releaseFolderName)
 
         // If one of the folders already exists as a file, throw an error
-        val message = "Cannot download, the %s folder already exists as a regular file (%s)"
+        val message = "The %s folder already exists as a regular file (%s)"
         when {
             Files.isRegularFile(downloadFolderPath) -> throw BandCampDownloaderError(
                 message.format(
