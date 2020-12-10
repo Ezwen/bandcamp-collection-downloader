@@ -187,19 +187,19 @@ object BandcampCollectionDownloader {
             Files.isRegularFile(downloadFolderPath) -> throw BandCampDownloaderError(
                 message.format(
                     "download",
-                    downloadFolderPath.toAbsolutePath().toString()
+                    downloadFolderPath.toAbsolutePath().normalize().toString()
                 )
             )
             Files.isRegularFile(artistFolderPath) -> throw BandCampDownloaderError(
                 message.format(
                     "artist",
-                    artistFolderPath.toAbsolutePath().toString()
+                    artistFolderPath.toAbsolutePath().normalize().toString()
                 )
             )
             Files.isRegularFile(releaseFolderPath) -> throw BandCampDownloaderError(
                 message.format(
                     "release",
-                    releaseFolderPath.toAbsolutePath().toString()
+                    releaseFolderPath.toAbsolutePath().normalize().toString()
                 )
             )
         }
@@ -220,7 +220,8 @@ object BandcampCollectionDownloader {
                     artistFolderPath.resolve(releaseFolderName)
                 }
                 Util.log(
-                    "Using existing folder found with different case: " + releaseFolderPath.toAbsolutePath().toString()
+                    "Using existing folder found with different case: " + releaseFolderPath.toAbsolutePath().normalize()
+                        .toString()
                 )
             }
         }
