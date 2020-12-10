@@ -1,5 +1,11 @@
 = Changelog
 
+== NEXT
+
+- Now gracefully fails when some artist or release path is unfortunately resolved into an existing regular file (and not a folder).
+- If the artist or release folder already exists, but with a different case, this existing folder will be used.
+This avoids having two different folders "artist" and "Artist" due to different spelling in different releases.
+This probably also avoids problems on Windows systems.
 
 == v2020-12-06
 
