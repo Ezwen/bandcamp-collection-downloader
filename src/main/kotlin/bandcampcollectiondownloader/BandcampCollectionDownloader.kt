@@ -18,14 +18,14 @@ object BandcampCollectionDownloader {
             if (!path.toFile().exists()) {
                 return emptyList()
             }
-            return path.toFile().readLines()
+            return path.toFile().readLines().map { line -> line.split("|")[0] }
         }
 
-        fun add(line: String) {
+        fun add(id: String, description: String) {
             if (!Files.exists(path)) {
                 Files.createFile(path)
             }
-            path.toFile().appendText(line + "\n")
+            path.toFile().appendText("$id| $description\n")
         }
     }
 
@@ -40,7 +40,7 @@ object BandcampCollectionDownloader {
         Util.logSeparator()
 
         // Gather cookies
-        val cookiesCandidates : MutableList<CookiesManagement.Cookies> = ArrayList<CookiesManagement.Cookies>()
+        val cookiesCandidates : MutableList<CookiesManagement.Cookies> = ArrayList()
         if (args.pathToCookiesFile != null) {
             // Parse JSON cookies (obtained with "Cookie Quick Manager" Firefox addon)
             Util.log("Loading provided cookies file…")
@@ -130,7 +130,7 @@ object BandcampCollectionDownloader {
         // If null, then the download page is simply invalid and not usable anymore, therefore it can be added to the cache
         if (digitalItem == null) {
             Util.log("Sale Item ID $saleItemId cannot be downloaded anymore (maybe a refund?); skipping")
-            cache.add(saleItemId)
+            cache.add(saleItemId, "UNKNOWN")
             return
         }
 
@@ -186,7 +186,7 @@ object BandcampCollectionDownloader {
                 Util.log("$printableReleaseName already exists on disk, skipping.")
             }
             if (saleItemId !in cache.getContent()) {
-                cache.add(saleItemId)
+                cache.add(saleItemId, printableReleaseName)
             }
         }, args.retries, args.ignoreFailedReleases)
 
