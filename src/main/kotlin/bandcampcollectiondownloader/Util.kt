@@ -169,15 +169,4 @@ object Util {
         }
     }
 
-
-    // WIP
-    fun getFileIgnoreCase(path: Path): List<Path> {
-        val parentFolder = path.parent
-        val fileName = path.fileName.toString()
-        return Files.find(parentFolder, 1, BiPredicate { p2, fileAttributes ->
-            p2.fileName.toString().toLowerCase().equals(fileName.toLowerCase())
-        }).toList()
-
-    }
-
 }

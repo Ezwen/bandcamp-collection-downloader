@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatterBuilder
 import java.time.temporal.ChronoField
 import java.util.*
 import java.util.concurrent.*
+import java.util.stream.Collectors
 
 object BandcampCollectionDownloader {
 
@@ -34,7 +35,7 @@ object BandcampCollectionDownloader {
      * Core function called from the Main function.
      */
     fun downloadAll(args: Args) {
-        Util.log("Target bandcamp account: " + args.bandcampUser)
+        Util.log("Target Bandcamp account: " + args.bandcampUser)
         Util.log("Target download folder: " + args.pathToDownloadFolder.toAbsolutePath().normalize())
         Util.log("Target audio format: " + args.audioFormat)
         Util.logSeparator()
@@ -52,7 +53,7 @@ object BandcampCollectionDownloader {
         }
 
         // Try to connect to bandcamp with each provided cookies
-        var connector : BandcampAPIConnector? = null
+        var connector: BandcampAPIConnector? = null
         for (cookies in cookiesCandidates) {
             try {
                 Util.log("Trying cookies from: " + cookies.source)
@@ -60,7 +61,8 @@ object BandcampCollectionDownloader {
 
                 // Try to connect to bandcamp with the cookies
                 Util.log("Connecting to Bandcamp…")
-                val candidateConnector = BandcampAPIConnector(args.bandcampUser, cookies.content, args.timeout, args.retries)
+                val candidateConnector =
+                    BandcampAPIConnector(args.bandcampUser, cookies.content, args.timeout, args.retries)
                 candidateConnector.init()
                 val pageName = candidateConnector.getBandcampPageName()
                 Util.log("""Found "$pageName" with ${candidateConnector.getAllSaleItemIDs().size} items.""")
@@ -69,7 +71,7 @@ object BandcampCollectionDownloader {
                 connector = candidateConnector
                 break
 
-            } catch (e:Throwable) {
+            } catch (e: Throwable) {
                 Util.log("""Cookies from ${cookies.source} did not work.""")
             }
         }
@@ -87,7 +89,11 @@ object BandcampCollectionDownloader {
         val itemsToDownload = connector.getAllSaleItemIDs().filter { saleItemId -> saleItemId !in cacheContent }
         val alreadyDownloadedItemsCount = connector.getAllSaleItemIDs().size - itemsToDownload.size
         if (alreadyDownloadedItemsCount > 0) {
-            Util.log("Ignoring $alreadyDownloadedItemsCount already downloaded items (based on '${cacheFilePath.toAbsolutePath().normalize()}').")
+            Util.log(
+                "Ignoring $alreadyDownloadedItemsCount already downloaded items (based on '${
+                    cacheFilePath.toAbsolutePath().normalize()
+                }')."
+            )
         }
 
         Util.logSeparator()
@@ -137,11 +143,12 @@ object BandcampCollectionDownloader {
         // Get data (1)
         var releasetitle = digitalItem.title
         var artist = digitalItem.artist
-        var releaseUTC : ZonedDateTime? = null
+        var releaseUTC: ZonedDateTime? = null
         var releaseYear: CharSequence = "0000"
 
         // Skip preorders
-        val dateFormatter = DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd MMM yyyy HH:mm:ss zzz").toFormatter(Locale.ENGLISH)
+        val dateFormatter = DateTimeFormatterBuilder().parseCaseInsensitive().appendPattern("dd MMM yyyy HH:mm:ss zzz")
+            .toFormatter(Locale.ENGLISH)
 
         if (digitalItem.package_release_date != null) {
             releaseUTC = ZonedDateTime.parse(digitalItem.package_release_date, dateFormatter)
@@ -168,18 +175,66 @@ object BandcampCollectionDownloader {
         releasetitle = Util.replaceInvalidCharsByUnicode(releasetitle)
         artist = Util.replaceInvalidCharsByUnicode(artist)
 
-        // Prepare artist and release folder
+        // Prepare artist and release folder paths
+        val downloadFolderPath = Paths.get("${args.pathToDownloadFolder}")
         val releaseFolderName = "$releaseYear - $releasetitle"
-        val artistFolderPath = Paths.get("${args.pathToDownloadFolder}").resolve(artist)
-        val releaseFolderPath = artistFolderPath.resolve(releaseFolderName)
+        var artistFolderPath = downloadFolderPath.resolve(artist)
+        var releaseFolderPath = artistFolderPath.resolve(releaseFolderName)
+
+        // If one of the folders already exists as a file, throw an error
+        val message = "The %s folder already exists as a regular file (%s)"
+        when {
+            Files.isRegularFile(downloadFolderPath) -> throw BandCampDownloaderError(
+                message.format(
+                    "download",
+                    downloadFolderPath.toAbsolutePath().normalize().toString()
+                )
+            )
+            Files.isRegularFile(artistFolderPath) -> throw BandCampDownloaderError(
+                message.format(
+                    "artist",
+                    artistFolderPath.toAbsolutePath().normalize().toString()
+                )
+            )
+            Files.isRegularFile(releaseFolderPath) -> throw BandCampDownloaderError(
+                message.format(
+                    "release",
+                    releaseFolderPath.toAbsolutePath().normalize().toString()
+                )
+            )
+        }
+
+        // If artist or release folder exists with different case, use it instead of the planned one
+        if (Files.isDirectory(downloadFolderPath) && !Files.isDirectory(artistFolderPath)) {
+            val candidateArtistFolders = Files.list(downloadFolderPath)
+                .filter { f -> Files.isDirectory(f) && f.fileName.toString().endsWith(artist, true) }
+                .collect(Collectors.toList())
+            if (candidateArtistFolders.isNotEmpty()) {
+                artistFolderPath = candidateArtistFolders[0]
+                val candidateReleaseFolders = Files.list(artistFolderPath)
+                    .filter { f -> Files.isDirectory(f) && f.fileName.toString().endsWith(releaseFolderName, true) }
+                    .collect(Collectors.toList())
+                releaseFolderPath = if (candidateReleaseFolders.isNotEmpty()) {
+                    candidateReleaseFolders[0]
+                } else {
+                    artistFolderPath.resolve(releaseFolderName)
+                }
+                Util.log(
+                    "Using existing folder found with different case: " + releaseFolderPath.toAbsolutePath().normalize()
+                        .toString()
+                )
+            }
+        }
+
+        // Find cover URL
         val coverURL = connector.getCoverURL(saleItemId)
 
-        Util.log("Starting the download of $printableReleaseName.")
-
         // Download release, with as many retries as configured
+        Util.log("Starting the download of $printableReleaseName.")
         Util.retry({
             val downloadUrl = connector.retrieveRealDownloadURL(saleItemId, args.audioFormat)!!
-            val downloaded = downloadRelease(downloadUrl, artistFolderPath, releaseFolderPath, isSingleTrack, args.timeout, coverURL)
+            val downloaded =
+                downloadRelease(downloadUrl, artistFolderPath, releaseFolderPath, isSingleTrack, args.timeout, coverURL)
             if (downloaded) {
                 Util.log("$printableReleaseName successfully downloaded.")
             } else {
@@ -193,7 +248,14 @@ object BandcampCollectionDownloader {
     }
 
 
-    private fun downloadRelease(fileURL: String, artistFolderPath: Path, releaseFolderPath: Path, isSingleTrack: Boolean, timeout: Int, coverURL: String): Boolean {
+    private fun downloadRelease(
+        fileURL: String,
+        artistFolderPath: Path,
+        releaseFolderPath: Path,
+        isSingleTrack: Boolean,
+        timeout: Int,
+        coverURL: String
+    ): Boolean {
         // If the artist folder does not exist, we create it
         if (!Files.exists(artistFolderPath)) {
             Files.createDirectories(artistFolderPath)

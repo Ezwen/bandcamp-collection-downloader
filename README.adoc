@@ -37,10 +37,13 @@ Usage: <main class> [-ehv] [-c=<pathToCookiesFile>] [-d=<pathToDownloadFolder>] 
 
 === Bandcamp authentication
 
-This tool does not manage authentication with Bandcamp servers, as they require a valid token from Google Captcha. Hence, authentication must first be achieved using Firefox. Then there are two possibilities:
+This tool does not manage authentication with Bandcamp servers, as they require a valid token from Google Captcha. 
+Hence, authentication must first be achieved using Firefox or Chrome. 
+Then there are two possibilities:
 
-- If running a Windows or Linux system (and if the `--cookies-file` parameter is not used), then the tool will automatically find the required cookies in the Firefox profile folder of the system user. *This approach is now incompatible with versions of Firefox prior to 74.0*.
-- Else, Bandcamp cookies must be exported in JSON using the Firefox Addon https://addons.mozilla.org/en-US/firefox/addon/cookie-quick-manager/[Cookie Quick Manager] or in text format with this Chrome Addon https://chrome.google.com/webstore/detail/cookiestxt/njabckikapfpffapmjgojcnbfjonfjfg?hl=en[cookies.txt].  The output, either txt from cookies.txt or JSON from Cookie Quick Manager, can then be used using the parameter `--cookies-file`
+- If using Firefox and running a Windows or Linux system (and if the `--cookies-file` parameter is not used), then the tool will automatically find the required cookies in the Firefox profile folder of the system user. *This approach is now incompatible with versions of Firefox prior to 74.0*.
+- Else, Bandcamp cookies must be exported in JSON using the Firefox Addon https://addons.mozilla.org/en-US/firefox/addon/cookie-quick-manager/[Cookie Quick Manager] or in text format with this Chrome Addon https://chrome.google.com/webstore/detail/cookiestxt/njabckikapfpffapmjgojcnbfjonfjfg?hl=en[cookies.txt].
+The output, either txt from cookies.txt or JSON from Cookie Quick Manager, can then be used using the parameter `--cookies-file`.
 
 === Usage
 
@@ -54,6 +57,19 @@ $ java -jar bandcamp-collection-downloader.jar --cookies-file=cookies.json --dow
 This will download all albums ever bought by the Bandcamp account _myBandcampIdentifier_, and extract the music in the folder `~/Music`, The tool always creates one folder per artist, each containing one folder per album (with the format `<year> - <album name>`).
 
 After downloading the first album, it will create a `bandcamp-collection-downloader.cache` file in the chosen download folder. This allows the tool to remembers which albums have already been successfully downloaded, and thus prevents unnecessarily hitting the Bandcamp servers.
+
+=== Installing and updating
+
+Releases are published on link:https://framagit.org/Ezwen/bandcamp-collection-downloader/-/releases[this page].
+
+Each release comes with an executable jar file named `bandcamp-collection-downloader.jar` that contains all required dependencies, and that can therefore be directly executed with a simple `java -jar` command.
+Look for the link named "_Executable jar_" under each release description.
+
+At the moment there it no official installation procedure: just put `bandcamp-collection-downloader.jar` wherever you want and execute it from anywhere you want.
+To install a newer version, simply replace your `bandcamp-collection-downloader.jar` file by the most recent version from the releases page.
+
+If you want to be notified of new releases, you can subscribe to link:https://framagit.org/Ezwen/bandcamp-collection-downloader/-/tags?format=atom[this Atom feed].
+
 
 === Compiling
 
