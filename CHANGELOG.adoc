@@ -1,6 +1,6 @@
 = Changelog
 
-== NEXT
+== v2020-12-15
 
 - Now gracefully fails when some artist or release path is unfortunately resolved into an existing regular file (and not a folder).
 - If the artist or release folder already exists, but with a different case, this existing folder will be used.
