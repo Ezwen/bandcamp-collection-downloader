@@ -1,5 +1,11 @@
 = Changelog
 
+== NEXT
+
+- Add `--dry-run` option to run as normal but without writing anything to the filesystem. 
+- Add a test case that uses a real bandcamp account called _bcdtest_ which owns one item.  
+- Refactor code: split in packages, and add `IO` interface to isolate IO in a single object.
+
 == v2020-12-15
 
 - Now gracefully fails when some artist or release path is unfortunately resolved into an existing regular file (and not a folder).
