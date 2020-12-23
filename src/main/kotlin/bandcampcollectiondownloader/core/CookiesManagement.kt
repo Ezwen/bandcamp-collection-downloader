@@ -1,5 +1,6 @@
-package bandcampcollectiondownloader
+package bandcampcollectiondownloader.core
 
+import bandcampcollectiondownloader.util.Util
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.google.gson.annotations.SerializedName

@@ -1,5 +1,6 @@
-package bandcampcollectiondownloader
+package bandcampcollectiondownloader.core
 
+import bandcampcollectiondownloader.util.Util
 import com.google.gson.Gson
 import org.jsoup.Connection.Method
 import org.jsoup.HttpStatusException
@@ -18,8 +19,8 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
     private var initialized: Boolean = false
 
     private data class ParsedFanpageData(
-            val fan_data: FanData,
-            val collection_data: CollectionData
+        val fan_data: FanData,
+        val collection_data: CollectionData
     )
 
     private data class FanData(

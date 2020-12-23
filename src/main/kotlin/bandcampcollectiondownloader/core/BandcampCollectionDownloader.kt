@@ -1,6 +1,7 @@
-package bandcampcollectiondownloader
+package bandcampcollectiondownloader.core
 
-import org.zeroturnaround.zip.ZipUtil
+import bandcampcollectiondownloader.util.IO
+import bandcampcollectiondownloader.util.Util
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -12,21 +13,21 @@ import java.util.*
 import java.util.concurrent.*
 import java.util.stream.Collectors
 
-object BandcampCollectionDownloader {
+class BandcampCollectionDownloader(private val args: Args, private val io: IO) {
 
-    class Cache constructor(private val path: Path) {
+    class Cache constructor(private val path: Path, private val io: IO) {
         fun getContent(): List<String> {
             if (!path.toFile().exists()) {
                 return emptyList()
             }
-            return path.toFile().readLines().map { line -> line.split("|")[0] }
+            return io.readLines(path).map { line -> line.split("|")[0] }
         }
 
         fun add(id: String, description: String) {
             if (!Files.exists(path)) {
-                Files.createFile(path)
+                io.createFile(path)
             }
-            path.toFile().appendText("$id| $description\n")
+            io.append(path,"$id| $description\n")
         }
     }
 
@@ -34,14 +35,16 @@ object BandcampCollectionDownloader {
     /**
      * Core function called from the Main function.
      */
-    fun downloadAll(args: Args) {
+    fun downloadAll(): Boolean {
         Util.log("Target Bandcamp account: " + args.bandcampUser)
         Util.log("Target download folder: " + args.pathToDownloadFolder.toAbsolutePath().normalize())
         Util.log("Target audio format: " + args.audioFormat)
         Util.logSeparator()
 
+        var result = true
+
         // Gather cookies
-        val cookiesCandidates : MutableList<CookiesManagement.Cookies> = ArrayList()
+        val cookiesCandidates: MutableList<CookiesManagement.Cookies> = ArrayList()
         if (args.pathToCookiesFile != null) {
             // Parse JSON cookies (obtained with "Cookie Quick Manager" Firefox addon)
             Util.log("Loading provided cookies file…")
@@ -82,7 +85,7 @@ object BandcampCollectionDownloader {
 
         // Prepare/load cache file
         val cacheFilePath = args.pathToDownloadFolder.resolve("bandcamp-collection-downloader.cache")
-        val cache = Cache(cacheFilePath)
+        val cache = Cache(cacheFilePath, io)
         val cacheContent = cache.getContent()
 
         // Only work on items that have not been downloaded yet
@@ -111,9 +114,10 @@ object BandcampCollectionDownloader {
                 Util.log("Managing item $itemNumber/${itemsToDownload.size}")
 
                 try {
-                    manageDownloadPage(connector, saleItemID, args, cache)
+                    manageDownloadPage(connector, saleItemID, cache)
                 } catch (e: BandCampDownloaderError) {
                     Util.log("Could not download item: " + e.message)
+                    result = false
                 }
             }
 
@@ -125,11 +129,15 @@ object BandcampCollectionDownloader {
             }
         }
 
+
         // To make sure we quit once all is done
         threadPoolExecutor.shutdown()
+        threadPoolExecutor.awaitTermination(1, TimeUnit.DAYS)
+
+        return result
     }
 
-    private fun manageDownloadPage(connector: BandcampAPIConnector, saleItemId: String, args: Args, cache: Cache) {
+    private fun manageDownloadPage(connector: BandcampAPIConnector, saleItemId: String, cache: Cache) {
 
         val digitalItem = connector.retrieveDigitalItemData(saleItemId)
 
@@ -258,36 +266,38 @@ object BandcampCollectionDownloader {
     ): Boolean {
         // If the artist folder does not exist, we create it
         if (!Files.exists(artistFolderPath)) {
-            Files.createDirectories(artistFolderPath)
+            io.createDirectories(artistFolderPath)
         }
 
         // If the release folder does not exist, we create it
         if (!Files.exists(releaseFolderPath)) {
-            Files.createDirectories(releaseFolderPath)
+            io.createDirectories(releaseFolderPath)
         }
 
         // If the folder is empty, or if it only contains the zip.part file, we proceed
-        val amountFiles = releaseFolderPath.toFile().listFiles()!!.size
+        val amountFiles =
+            if (!args.dryRun || Files.exists(releaseFolderPath)) releaseFolderPath.toFile().listFiles()!!.size
+            else 0
         if (amountFiles < 2) {
 
             // Download content
-            val outputFilePath: Path = Util.downloadFile(fileURL, releaseFolderPath, timeout = timeout)
+            val outputFilePath: Path = io.downloadFile(fileURL, releaseFolderPath, timeout = timeout)
 
             // If this is a zip, we unzip
             if (!isSingleTrack) {
 
                 // Unzip
                 try {
-                    ZipUtil.unpack(outputFilePath.toFile(), releaseFolderPath.toFile())
+                    io.unzip(outputFilePath, releaseFolderPath)
                 } finally {
                     // Delete zip
-                    Files.delete(outputFilePath)
+                    io.delete(outputFilePath)
                 }
             }
 
             // Else if this is a single track, we just fetch the cover
             else {
-                Util.downloadFile(coverURL, releaseFolderPath, "cover.jpg", timeout)
+                io.downloadFile(coverURL, releaseFolderPath, "cover.jpg", timeout)
             }
             return true
         } else {

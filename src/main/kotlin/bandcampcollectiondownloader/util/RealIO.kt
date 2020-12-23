@@ -1,5 +1,6 @@
-package bandcampcollectiondownloader
+package bandcampcollectiondownloader.util
 
+import org.zeroturnaround.zip.ZipUtil
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
@@ -8,21 +9,32 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.text.DecimalFormat
 import java.util.concurrent.ConcurrentHashMap
-import java.util.function.BiPredicate
 import javax.mail.internet.ContentDisposition
-import kotlin.streams.toList
 
+class RealIO(dryRun: Boolean = false) : IO {
 
-object Util {
+    private val dryRun : Boolean = dryRun
 
-    private const val BUFFER_SIZE = 4096
+    override fun createFile(path: Path) {
+        Files.createFile(path)
+    }
+
+    override fun append(path: Path, content: String) {
+        path.toFile().appendText(content)
+    }
+
+    override fun createDirectories(path: Path) {
+        Files.createDirectories(path)
+    }
+
+    private val BUFFER_SIZE = 4096
 
     private val parallelDownloadsProgresses: MutableMap<String, String> = ConcurrentHashMap()
 
     /**
-     * From http://www.codejava.net/java-se/networking/use-httpurlconnection-to-download-file-from-an-http-url
+     * Initially from http://www.codejava.net/java-se/networking/use-httpurlconnection-to-download-file-from-an-http-url
      */
-    fun downloadFile(fileURL: String, saveDir: Path, optionalFileName: String = "", timeout: Int): Path {
+    override fun downloadFile(fileURL: String, saveDir: Path, optionalFileName: String, timeout: Int): Path {
 
         // Prepare HTTP connection
         val url = URL(fileURL)
@@ -37,14 +49,14 @@ object Util {
             // Retrieve information (name, size)
             val disposition = httpConn.getHeaderField("Content-Disposition")
             val fileName: String =
-                    when {
-                        optionalFileName != "" -> optionalFileName
-                        disposition != null -> {
-                            val parsedDisposition = ContentDisposition(disposition)
-                            parsedDisposition.getParameter("filename")
-                        }
-                        else -> Paths.get(url.file).fileName.toString()
+                when {
+                    optionalFileName != "" -> optionalFileName
+                    disposition != null -> {
+                        val parsedDisposition = ContentDisposition(disposition)
+                        parsedDisposition.getParameter("filename")
                     }
+                    else -> Paths.get(url.file).fileName.toString()
+                }
             val contentLengthHeaderField = httpConn.getHeaderField("Content-Length")
             val fileSize: Long = contentLengthHeaderField.toLong()
 
@@ -76,13 +88,13 @@ object Util {
 
                 // Print progresses of all download threads
                 val prefix =
-                        if (parallelDownloadsProgresses.size > 1) {
-                            "Progresses: "
-                        } else {
-                            "Progress: "
-                        }
+                    if (parallelDownloadsProgresses.size > 1) {
+                        "Progresses: "
+                    } else {
+                        "Progress: "
+                    }
                 val message = "$prefix$allProgresses"
-                print(fillWithBlanks(message) + "\r")
+                print(Util.fillWithBlanks(message) + "\r")
 
                 // Download a new chunk
                 outputStream.write(buffer, 0, bytesRead)
@@ -95,7 +107,7 @@ object Util {
 
             // Clean the console output if needed
             if (parallelDownloadsProgresses.isEmpty())
-                print(fillWithBlanks("") + "\r")
+                print(Util.fillWithBlanks("") + "\r")
 
             // Close streams and connections
             outputStream.close()
@@ -111,62 +123,16 @@ object Util {
 
     }
 
-    fun isUnix(): Boolean {
-        val os = System.getProperty("os.name").toLowerCase()
-        return os.indexOf("nix") >= 0 || os.indexOf("nux") >= 0 || os.indexOf("aix") > 0
+    override fun delete(path: Path) {
+        Files.delete(path)
     }
 
-    fun isWindows(): Boolean {
-        val os = System.getProperty("os.name").toLowerCase()
-        return os.indexOf("win") >= 0
+    override fun unzip(zipPath: Path, outputFolderPath: Path) {
+        ZipUtil.unpack(zipPath.toFile(), outputFolderPath.toFile())
+
     }
 
-    fun replaceInvalidCharsByUnicode(s: String): String {
-        var result: String = s
-        for ((old, new) in Constants.UNICODE_CHARS_REPLACEMENTS) {
-            result = result.replace(old, new)
-        }
-        return result
+    override fun readLines(path: Path): List<String> {
+        return path.toFile().readLines()
     }
-
-    private fun fillWithBlanks(message: String): String {
-        return message + " ".repeat((Constants.LINESIZE - message.length).coerceAtLeast(0))
-    }
-
-    fun log(message: String) {
-        var messageWithPrefix: String = message
-        if (Thread.currentThread().name != "main") {
-            messageWithPrefix = "[${Thread.currentThread().name}] " + messageWithPrefix
-        }
-        println(fillWithBlanks(messageWithPrefix))
-    }
-
-    fun logSeparator() {
-        log("------------")
-    }
-
-
-    fun <T> retry(function: () -> T, retries: Int, ignoreFailure: Boolean = false): T? {
-        // Download release, with as many retries as configured
-        val attempts = retries + 1
-        for (i in 1..attempts) {
-            if (i > 1) {
-                log("Retrying (${i - 1}/${retries}).")
-                Thread.sleep(1000)
-            }
-            try {
-                return function()
-            } catch (e: Throwable) {
-                log("""Error while trying: "${e.javaClass.name}: ${e.message}".""")
-            }
-        }
-        val message = "Could not perform task after $retries retries."
-        if (ignoreFailure) {
-            log(message)
-            return null
-        } else {
-            throw BandCampDownloaderError(message)
-        }
-    }
-
 }

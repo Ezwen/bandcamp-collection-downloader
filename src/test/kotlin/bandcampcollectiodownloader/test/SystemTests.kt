@@ -1,10 +1,13 @@
 package bandcampcollectiodownloader.test
 
-import bandcampcollectiondownloader.Args
-import bandcampcollectiondownloader.BandCampDownloaderError
-import bandcampcollectiondownloader.BandcampCollectionDownloader
+import bandcampcollectiondownloader.core.Args
+import bandcampcollectiondownloader.core.BandCampDownloaderError
+import bandcampcollectiondownloader.core.BandcampCollectionDownloader
+import bandcampcollectiondownloader.util.DryIO
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.*
 
@@ -12,14 +15,14 @@ import java.util.*
  * Note: bli is a valid bandcamp user (completely randomly chosen),
  * but for which we have no credentials (ie. valid cookies).
  */
-class BandcampCollectionDownloaderTests {
+class SystemTests {
 
     @Test
     fun testErrorCookiesFileNotFound() {
         val args = Args()
         args.pathToCookiesFile = Paths.get("bli")
         assertThrows<BandCampDownloaderError> {
-            BandcampCollectionDownloader.downloadAll(args)
+            BandcampCollectionDownloader(args, DryIO()).downloadAll()
         }
     }
 
@@ -29,7 +32,7 @@ class BandcampCollectionDownloaderTests {
         val args = Args()
         args.pathToCookiesFile = Paths.get("./test-data/notjsoncookies.json")
         assertThrows<BandCampDownloaderError> {
-            BandcampCollectionDownloader.downloadAll(args)
+            BandcampCollectionDownloader(args, DryIO()).downloadAll()
         }
     }
 
@@ -38,7 +41,7 @@ class BandcampCollectionDownloaderTests {
         val args = Args()
         args.pathToCookiesFile = Paths.get("./test-data/invalidcookies_wrongkeys.json")
         assertThrows<BandCampDownloaderError> {
-            BandcampCollectionDownloader.downloadAll(args)
+            BandcampCollectionDownloader(args, DryIO()).downloadAll()
         }
     }
 
@@ -47,7 +50,7 @@ class BandcampCollectionDownloaderTests {
         val args = Args()
         args.pathToCookiesFile = Paths.get("./test-data/invalidcookies_noarray.json")
         assertThrows<BandCampDownloaderError> {
-            BandcampCollectionDownloader.downloadAll(args)
+            BandcampCollectionDownloader(args, DryIO()).downloadAll()
         }
     }
 
@@ -58,7 +61,7 @@ class BandcampCollectionDownloaderTests {
         args.bandcampUser = "zerz1e3687dfs3df7"
         args.timeout = 5000
         assertThrows<BandCampDownloaderError> {
-            BandcampCollectionDownloader.downloadAll(args)
+            BandcampCollectionDownloader(args, DryIO()).downloadAll()
         }
     }
 
@@ -69,7 +72,7 @@ class BandcampCollectionDownloaderTests {
         args.bandcampUser = "bli"
         args.timeout = 5000
         assertThrows<BandCampDownloaderError> {
-            BandcampCollectionDownloader.downloadAll(args)
+            BandcampCollectionDownloader(args, DryIO()).downloadAll()
         }
     }
 
@@ -81,8 +84,21 @@ class BandcampCollectionDownloaderTests {
         args.bandcampUser = "bli"
         args.timeout = 5000
         assertThrows<BandCampDownloaderError> {
-            BandcampCollectionDownloader.downloadAll(args)
+            BandcampCollectionDownloader(args, DryIO()).downloadAll()
         }
+    }
+
+    @Test
+    fun testOKValidCookiesDryRun() {
+        val args = Args()
+        args.pathToCookiesFile = Paths.get("./test-data/bcdtestcookies.json")
+        args.bandcampUser = "bcdtest"
+        val tmpDir = Files.createTempDirectory("bandcamp-collection-downloader-test")
+        tmpDir.toFile().deleteOnExit()
+        args.pathToDownloadFolder = tmpDir
+        args.dryRun = true
+        val result = BandcampCollectionDownloader(args, DryIO()).downloadAll()
+        assertTrue(result)
     }
 
     @Throws(Exception::class)

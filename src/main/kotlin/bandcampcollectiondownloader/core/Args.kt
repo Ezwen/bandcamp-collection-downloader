@@ -1,4 +1,4 @@
-package bandcampcollectiondownloader
+package bandcampcollectiondownloader.core
 
 import picocli.CommandLine
 import java.nio.file.Path
@@ -41,6 +41,8 @@ data class Args(
         var jobs: Int = 4,
 
         @CommandLine.Option(names = ["-v", "--version"], versionHelp = true, description = ["Display the version and exits."])
-        var version: Boolean = false
+        var version: Boolean = false,
 
+        @CommandLine.Option(names = ["-n", "--dry-run"], usageHelp = false, description = ["Perform a trial run with no changes made."])
+        var dryRun: Boolean = false
 )

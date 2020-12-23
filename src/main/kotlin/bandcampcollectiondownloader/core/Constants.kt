@@ -1,4 +1,4 @@
-package bandcampcollectiondownloader
+package bandcampcollectiondownloader.core
 
 object Constants {
 
