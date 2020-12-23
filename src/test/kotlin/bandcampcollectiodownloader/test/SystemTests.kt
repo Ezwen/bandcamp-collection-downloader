@@ -4,6 +4,7 @@ import bandcampcollectiondownloader.core.Args
 import bandcampcollectiondownloader.core.BandCampDownloaderError
 import bandcampcollectiondownloader.core.BandcampCollectionDownloader
 import bandcampcollectiondownloader.util.DryIO
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -97,8 +98,9 @@ class SystemTests {
         tmpDir.toFile().deleteOnExit()
         args.pathToDownloadFolder = tmpDir
         args.dryRun = true
-        val result = BandcampCollectionDownloader(args, DryIO()).downloadAll()
-        assertTrue(result)
+        val dryIO = DryIO()
+        BandcampCollectionDownloader(args, dryIO).downloadAll()
+        assertFalse(dryIO.getUnzippedFiles().isEmpty())
     }
 
     @Throws(Exception::class)

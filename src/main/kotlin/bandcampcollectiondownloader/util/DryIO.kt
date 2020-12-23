@@ -8,6 +8,7 @@ import java.util.*
 class DryIO : IO {
 
     private val createdFiles: MutableList<Path> = ArrayList()
+    private val unzippedFiles: MutableList<Path> = ArrayList()
 
     private fun exists(path: Path): Boolean {
         return Files.exists(path) || !createdFiles.none { p -> p == path }
@@ -62,10 +63,15 @@ class DryIO : IO {
         )
         existsOrError(zipPath)
         existsOrError(outputFolderPath)
+        unzippedFiles.add(zipPath)
     }
 
     override fun readLines(path: Path): List<String> {
         existsOrError(path)
         return emptyList()
+    }
+
+    fun getUnzippedFiles() : List<Path>  {
+        return unzippedFiles
     }
 }

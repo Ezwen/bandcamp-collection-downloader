@@ -27,7 +27,7 @@ class BandcampCollectionDownloader(private val args: Args, private val io: IO) {
             if (!Files.exists(path)) {
                 io.createFile(path)
             }
-            io.append(path,"$id| $description\n")
+            io.append(path, "$id| $description\n")
         }
     }
 
@@ -35,13 +35,11 @@ class BandcampCollectionDownloader(private val args: Args, private val io: IO) {
     /**
      * Core function called from the Main function.
      */
-    fun downloadAll(): Boolean {
+    fun downloadAll() {
         Util.log("Target Bandcamp account: " + args.bandcampUser)
         Util.log("Target download folder: " + args.pathToDownloadFolder.toAbsolutePath().normalize())
         Util.log("Target audio format: " + args.audioFormat)
         Util.logSeparator()
-
-        var result = true
 
         // Gather cookies
         val cookiesCandidates: MutableList<CookiesManagement.Cookies> = ArrayList()
@@ -117,7 +115,6 @@ class BandcampCollectionDownloader(private val args: Args, private val io: IO) {
                     manageDownloadPage(connector, saleItemID, cache)
                 } catch (e: BandCampDownloaderError) {
                     Util.log("Could not download item: " + e.message)
-                    result = false
                 }
             }
 
@@ -133,8 +130,6 @@ class BandcampCollectionDownloader(private val args: Args, private val io: IO) {
         // To make sure we quit once all is done
         threadPoolExecutor.shutdown()
         threadPoolExecutor.awaitTermination(1, TimeUnit.DAYS)
-
-        return result
     }
 
     private fun manageDownloadPage(connector: BandcampAPIConnector, saleItemId: String, cache: Cache) {
