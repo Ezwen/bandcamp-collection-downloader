@@ -148,13 +148,13 @@ class BandcampCollectionDownloader(private val args: Args, private val io: IO) {
 
         // Filter by Artist
         if (args.filterArtist != null && digitalItem.artist != args.filterArtist) {
-            cache.add(saleItemId)
+            cache.add(saleItemId, "UNKNOWN")
             return
         }
 
         // Filter by Title
         if (args.filterTitle != null && digitalItem.title != args.filterTitle) {
-            cache.add(saleItemId)
+            cache.add(saleItemId, "UNKNOWN")
             return
         }
 
