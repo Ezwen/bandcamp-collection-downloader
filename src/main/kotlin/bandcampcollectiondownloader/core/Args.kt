@@ -43,13 +43,13 @@ data class Args(
         @CommandLine.Option(names = ["-v", "--version"], versionHelp = true, description = ["Display the version and exits."])
         var version: Boolean = false,
         
-        @CommandLine.Option(names = ["-ft", "--filter-title"], usageHelp = false, description = ["only downloads releases matching the specified string"])
+        @CommandLine.Option(names = ["-ft", "--filter-title"], usageHelp = false, description = ["Only downloads releases matching the specified title."])
         var filterTitle: String? = null,
 
-        @CommandLine.Option(names = ["-fa", "--filter-artist"], usageHelp = false, description = ["only downloads releases by the specified artist"])
+        @CommandLine.Option(names = ["-fa", "--filter-artist"], usageHelp = false, description = ["Only downloads releases by the specified artist."])
         var filterArtist: String? = null,
 
-        @CommandLine.Option(names = ["-fd", "--filter-date"], usageHelp = false, description = ["only downloads releases bought after the specified ISO8601"])
+        @CommandLine.Option(names = ["-fd", "--filter-date"], usageHelp = false, description = ["Only downloads releases bought after the specified ISO8601 data (eg. 2020-01-20)."])
         var filterDate: String? = null,
 
         @CommandLine.Option(names = ["-n", "--dry-run"], usageHelp = false, description = ["Perform a trial run with no changes made."])
