@@ -1,5 +1,9 @@
-package bandcampcollectiondownloader.core
+package bandcampcollectiondownloader.main
 
+import bandcampcollectiondownloader.core.Args
+import bandcampcollectiondownloader.core.BandCampDownloaderError
+import bandcampcollectiondownloader.core.BandcampCollectionDownloader
+import bandcampcollectiondownloader.core.Constants
 import bandcampcollectiondownloader.util.DryIO
 import bandcampcollectiondownloader.util.IO
 import bandcampcollectiondownloader.util.RealIO

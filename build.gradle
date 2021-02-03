@@ -36,7 +36,7 @@ compileTestKotlin {
 //create a single Jar with all dependencies
 task fatJar(type: Jar) {
     manifest {
-        attributes 'Main-Class': 'bandcampcollectiondownloader.MainKt'
+        attributes 'Main-Class': 'bandcampcollectiondownloader.main.MainKt'
     }
     archiveBaseName.set("bandcamp-collection-downloader")
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
