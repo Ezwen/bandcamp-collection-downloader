@@ -8,7 +8,7 @@ import org.jsoup.Jsoup
 import java.util.*
 import java.util.regex.Pattern
 
-class BandcampAPIConnector constructor(private val bandcampUser: String, private val cookies: Map<String, String>, private val timeout: Int, private val retries: Int) {
+class BandcampAPIConnector constructor(private val bandcampUser: String, private val cookies: Map<String, String>, private val skiptHiddenItems: Boolean, private val timeout: Int, private val retries: Int) {
 
     private var bandcampPageName: String? = null
     private val gson = Gson()
@@ -20,7 +20,8 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
 
     private data class ParsedFanpageData(
         val fan_data: FanData,
-        val collection_data: CollectionData
+        val collection_data: CollectionData,
+        val hidden_data: HiddenData
     )
 
     private data class FanData(
@@ -32,6 +33,12 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
             val item_count: Int,
             val last_token: String,
             val redownload_urls: Map<String, String>
+    )
+
+    private data class HiddenData(
+        val batch_size: Int,
+        val item_count: Int,
+        val last_token: String
     )
 
     private data class ParsedCollectionItems(
@@ -113,6 +120,32 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
                     moreAvailable = parsedCollectionData.more_available
                 }
             }
+
+            if( (!skiptHiddenItems) && (fanPageBlob.hidden_data.item_count > fanPageBlob.hidden_data.batch_size)) {
+                val fanId = fanPageBlob.fan_data.fan_id
+                var lastToken = fanPageBlob.hidden_data.last_token
+                var moreAvailable = true
+                while (moreAvailable) {
+                    // Append download pages from this api endpoint as well
+                    val theRest =
+                            Util.retry({
+                                Jsoup.connect("https://bandcamp.com/api/fancollection/1/hidden_items")
+                                        .ignoreContentType(true)
+                                        .timeout(timeout)
+                                        .cookies(cookies)
+                                        .method(Method.POST)
+                                        .requestBody("{\"fan_id\": $fanId, \"older_than_token\": \"$lastToken\"}")
+                                        .execute()
+                            }, retries)
+
+                    val parsedCollectionData = gson.fromJson(theRest!!.body(), ParsedCollectionItems::class.java)
+                    collection.putAll(parsedCollectionData.redownload_urls)
+
+                    lastToken = parsedCollectionData.last_token
+                    moreAvailable = parsedCollectionData.more_available
+                }
+            }
+
 
             this.saleItemsIDs2saleItemsURLs.putAll(collection)
             this.bandcampPageName = doc.title()

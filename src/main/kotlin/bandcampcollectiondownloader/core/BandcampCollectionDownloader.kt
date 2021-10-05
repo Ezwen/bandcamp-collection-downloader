@@ -63,7 +63,7 @@ class BandcampCollectionDownloader(private val args: Args, private val io: IO) {
                 // Try to connect to bandcamp with the cookies
                 Util.log("Connecting to Bandcamp…")
                 val candidateConnector =
-                    BandcampAPIConnector(args.bandcampUser, cookies.content, args.timeout, args.retries)
+                    BandcampAPIConnector(args.bandcampUser, cookies.content, args.skipHiddenItems, args.timeout, args.retries)
                 candidateConnector.init()
                 val pageName = candidateConnector.getBandcampPageName()
                 Util.log("""Found "$pageName" with ${candidateConnector.getAllSaleItemIDs().size} items.""")
