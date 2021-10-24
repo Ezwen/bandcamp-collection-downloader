@@ -17,6 +17,10 @@ data class Args(
                 ])
         var pathToCookiesFile: Path? = null,
 
+        @CommandLine.Option(names = ["--skip-hidden", "-s"], required = false,
+                description = ["Don't download hidden files (a few hidden files might be present in a cache and be downloaded though)"])
+        var skipHiddenItems: Boolean = false,
+
         @CommandLine.Option(names = ["--audio-format", "-f"], required = false,
                 description = ["The chosen audio format of the files to download (default: \${DEFAULT-VALUE}).", "Possible values: flac, wav, aac-hi, mp3-320, aiff-lossless, vorbis, mp3-v0, alac."])
         var audioFormat: String = "vorbis",
