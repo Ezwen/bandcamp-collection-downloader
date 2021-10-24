@@ -1,5 +1,6 @@
 package bandcampcollectiondownloader.core
 
+import bandcampcollectiondownloader.cli.Command
 import bandcampcollectiondownloader.util.IO
 import bandcampcollectiondownloader.util.Util
 import java.nio.file.Files
@@ -13,7 +14,7 @@ import java.util.*
 import java.util.concurrent.*
 import java.util.stream.Collectors
 
-class BandcampCollectionDownloader(private val args: Args, private val io: IO) {
+class BandcampCollectionDownloader(private val args: Command, private val io: IO) {
 
     class Cache constructor(private val path: Path, private val io: IO) {
         fun getContent(): List<String> {
