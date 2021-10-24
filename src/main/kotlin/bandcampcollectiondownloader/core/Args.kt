@@ -18,7 +18,7 @@ data class Args(
         var pathToCookiesFile: Path? = null,
 
         @CommandLine.Option(names = ["--skip-hidden", "-s"], required = false,
-                description = ["Don't download hidden files (a few hidden files might be present in a cache and be downloaded though)"])
+                description = ["Don't download hidden items of the collection."])
         var skipHiddenItems: Boolean = false,
 
         @CommandLine.Option(names = ["--audio-format", "-f"], required = false,
