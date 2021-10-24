@@ -10,17 +10,17 @@ repositories {
     mavenCentral()
 }
 dependencies {
-    compile 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.31'
-    compile 'org.jsoup:jsoup:1.14.3'
-    compile 'org.zeroturnaround:zt-zip:1.14'
-    compile 'org.slf4j:slf4j-simple:1.7.32'
-    compile 'com.sun.mail:javax.mail:1.6.2'
-    compile 'info.picocli:picocli:4.6.1'
-    compile 'com.google.code.gson:gson:2.8.8'
-    compile 'org.ini4j:ini4j:0.5.4'
-    compile 'org.xerial:sqlite-jdbc:3.36.0.2'
-    testCompile 'org.junit.jupiter:junit-jupiter-api:5.8.1'
-    testRuntime 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.31'
+    implementation 'org.jsoup:jsoup:1.14.3'
+    implementation 'org.zeroturnaround:zt-zip:1.14'
+    implementation 'org.slf4j:slf4j-simple:1.7.32'
+    implementation 'com.sun.mail:javax.mail:1.6.2'
+    implementation 'info.picocli:picocli:4.6.1'
+    implementation 'com.google.code.gson:gson:2.8.8'
+    implementation 'org.ini4j:ini4j:0.5.4'
+    implementation 'org.xerial:sqlite-jdbc:3.36.0.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
 }
 compileKotlin {
     kotlinOptions {
@@ -33,13 +33,14 @@ compileTestKotlin {
     }
 }
 
-//create a single Jar with all dependencies
 task fatJar(type: Jar) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     manifest {
         attributes 'Main-Class': 'bandcampcollectiondownloader.main.MainKt'
     }
-    archiveBaseName.set("bandcamp-collection-downloader")
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
-    with jar
+    from sourceSets.main.output
+    dependsOn configurations.runtimeClasspath
+    from {
+        configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
+    }
 }
