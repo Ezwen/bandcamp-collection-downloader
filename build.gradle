@@ -35,6 +35,7 @@ compileTestKotlin {
 
 //create a single Jar with all dependencies
 task fatJar(type: Jar) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     manifest {
         attributes 'Main-Class': 'bandcampcollectiondownloader.main.MainKt'
     }
