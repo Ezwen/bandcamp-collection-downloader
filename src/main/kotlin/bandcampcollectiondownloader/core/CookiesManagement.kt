@@ -33,16 +33,16 @@ object CookiesManagement {
     private val gson = Gson()
 
     private data class ParsedCookie(
-            @SerializedName("Name raw")
-            val nameRaw: String?,
+        @SerializedName("Name raw")
+        val nameRaw: String?,
 
-            @SerializedName("Content raw")
-            val contentRaw: String?
+        @SerializedName("Content raw")
+        val contentRaw: String?
     )
 
-    data class Cookies (
-            val source: Path,
-            val content: Map<String,String>
+    data class Cookies(
+        val source: Path,
+        val content: Map<String, String>
     )
 
 
@@ -50,10 +50,22 @@ object CookiesManagement {
         val result = java.util.HashMap<String, String>()
         for (parsedCookie in parsedCookies) {
             if (parsedCookie.contentRaw.isNullOrEmpty()) {
-                throw BandCampDownloaderError("Missing 'Content raw' field in cookie number ${parsedCookies.indexOf(parsedCookie) + 1}.")
+                throw BandCampDownloaderError(
+                    "Missing 'Content raw' field in cookie number ${
+                        parsedCookies.indexOf(
+                            parsedCookie
+                        ) + 1
+                    }."
+                )
             }
             if (parsedCookie.nameRaw.isNullOrEmpty()) {
-                throw BandCampDownloaderError("Missing 'Name raw' field in cookie number ${parsedCookies.indexOf(parsedCookie) + 1}.")
+                throw BandCampDownloaderError(
+                    "Missing 'Name raw' field in cookie number ${
+                        parsedCookies.indexOf(
+                            parsedCookie
+                        ) + 1
+                    }."
+                )
             }
             result[parsedCookie.nameRaw] = parsedCookie.contentRaw
         }
@@ -67,13 +79,13 @@ object CookiesManagement {
         }
         val fileData = String(Files.readAllBytes(cookiesFile))
         val parsedCookies =
-                try {
-                    if (cookiesFile.toString().endsWith(".json"))
-                        parsedCookiesToMap(gson.fromJson(fileData, Array<ParsedCookie>::class.java))  else
-                        parseCookiesText(fileData)
-                } catch (e: JsonSyntaxException) {
-                    throw BandCampDownloaderError("Cookies file '$cookiesFile' is not well formed: ${e.message}")
-                }
+            try {
+                if (cookiesFile.toString().endsWith(".json"))
+                    parsedCookiesToMap(gson.fromJson(fileData, Array<ParsedCookie>::class.java)) else
+                    parseCookiesText(fileData)
+            } catch (e: JsonSyntaxException) {
+                throw BandCampDownloaderError("Cookies file '$cookiesFile' is not well formed: ${e.message}")
+            }
         return Cookies(cookiesFile, parsedCookies)
     }
 
@@ -122,7 +134,7 @@ object CookiesManagement {
 
                 // Copy cookies file as tmp file
                 val tmpFolder = Files.createTempDirectory("bandcampCollectionDownloader")
-                val copiedCookiesPath = Files.copy(cookiesFilePath, tmpFolder.resolve("cookies.json"))
+                val copiedCookiesPath = Files.copy(cookiesFilePath, tmpFolder.resolve("cookies.sqlite"))
                 copiedCookiesPath.toFile().deleteOnExit()
 
                 // Start reading firefox's  cookies.sqlite
@@ -136,15 +148,20 @@ object CookiesManagement {
                     // For each resulting row
                     while (rs.next()) {
                         // Extract data from row
-                        val name = rs.getString("name")
-                        val value = rs.getString("value")
-                        val expiry = rs.getString("expiry").toLong()
+                        val name: String = rs.getString("name")
+                        val value: String = rs.getString("value")
+                        val expiry: Long = rs.getString("expiry").toLong()
+                        val originAttributes: String = rs.getString("originAttributes")
 
-                        // We only keep cookies that have not expired yet
-                        val now = Instant.now().epochSecond
-                        val difference = expiry - now
-                        if (difference > 0)
-                            result[name] = value
+                        // We only keep cookies that are not found in container tabs
+                        if (!originAttributes.contains("userContextId")) {
+                            // We only keep cookies that have not expired yet
+                            val now = Instant.now().epochSecond
+                            val difference = expiry - now
+                            if (difference > 0)
+                                result[name] = value
+                        }
+
                     }
                 } finally {
                     connection?.close()
