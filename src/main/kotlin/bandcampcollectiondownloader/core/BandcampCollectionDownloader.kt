@@ -247,7 +247,7 @@ class BandcampCollectionDownloader(private val args: Command, private val io: IO
             if (saleItemId !in cache.getContent()) {
                 cache.add(saleItemId, printableReleaseName)
             }
-        }, args.retries, args.ignoreFailedReleases)
+        }, args.retries, false)
 
     }
 

@@ -68,12 +68,6 @@ class Command : Callable<Int> {
     var timeout: Int = 50000
 
     @CommandLine.Option(
-        names = ["-e", "--skip-failed-releases"],
-        description = ["Skip releases that fail to download after the specified number of retries."]
-    )
-    var ignoreFailedReleases: Boolean = false
-
-    @CommandLine.Option(
         names = ["-j", "--jobs"],
         usageHelp = false,
         description = ["Amount of parallel jobs (threads) to use (default: 4)."]
