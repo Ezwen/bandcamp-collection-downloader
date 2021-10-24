@@ -1,6 +1,7 @@
 package bandcampcollectiondownloader.cli
 
 import bandcampcollectiondownloader.core.BandcampCollectionDownloader
+import bandcampcollectiondownloader.core.Constants
 import bandcampcollectiondownloader.util.DryIO
 import bandcampcollectiondownloader.util.IO
 import bandcampcollectiondownloader.util.RealIO
@@ -13,7 +14,8 @@ import java.util.concurrent.Callable
 @CommandLine.Command(
     name = "java -jar bandcamp-collection-downloader.jar",
     description = ["Download items from an existing Bandcamp account collection."],
-    mixinStandardHelpOptions = true
+    mixinStandardHelpOptions = true,
+    version = [Constants.VERSION]
 )
 class Command : Callable<Int> {
 
