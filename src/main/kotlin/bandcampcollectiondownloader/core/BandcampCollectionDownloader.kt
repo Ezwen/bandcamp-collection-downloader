@@ -169,7 +169,8 @@ class BandcampCollectionDownloader(private val args: Command, private val io: IO
         }
 
         // Get data (2)
-        val isSingleTrack: Boolean = digitalItem.download_type == "t"
+        val isSingleTrack: Boolean = (digitalItem.download_type == "t" || digitalItem.download_type_str == "track" || 
+            digitalItem.item_type == "track" )
 
         // Exit if no download URL can be found with the chosen audio format
         connector.retrieveRealDownloadURL(saleItemId, args.audioFormat)
