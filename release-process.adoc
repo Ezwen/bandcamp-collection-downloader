@@ -14,18 +14,6 @@ git commit -m "Release vYYYY-MM-DD"
 ```
 +
 where `YYYY-MM-DD` is the current date.
-// +
-// . Add a tag with the new version number:
-// +
-// ```
-// git tag vXXXX
-// ```
-// +
-// . Push everything to the remote git repository, including the new tag:
-// +
-// ```
-// git push --tags
-// ```
 +
 . Push everything to the remote git repository:
 +
