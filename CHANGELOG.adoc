@@ -4,7 +4,13 @@
 
 - Add `--dry-run` option to run as normal but without writing anything to the filesystem. 
 - Add a test case that uses a real bandcamp account called _bcdtest_ which owns one item.  
+- Add option to skip items marked as "hidden" in the Bandcamp collection − thank you to *julien-leclercq* for the help! 🍻
+- Remove option `--skip-failed-releases` / `-e`, as the current implementation does not take it into account anyway.
+- Fix a bug occurring when the downloader tries to unzip single tracks while `download_type` item is missing from item data − thank you to *karlreingit* for the fix! 🍻
+- When using Firefox as a source for cookies, only use cookies not find in "container tabs" (Future work: allow container tabs, but give a way to choose which ones?).
 - Refactor code: split in packages, and add `IO` interface to isolate IO in a single object.
+- Bump mosts dependencies, including _picocli_ now in version 4.6.1.
+- Minor improvements made to the CLI because of _picocli_ 4.6.1.
 
 == v2020-12-15
 
