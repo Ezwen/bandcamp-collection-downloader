@@ -2,6 +2,7 @@
 
 Everything is manual at the moment.
 
+. Make sure that `README.adoc` is up-to-date with the current state of the project (especially CLI options), and make a commit if required.
 . Make sure the git local repository is clean (ie. nothing listed with `git status`).
 . Change the following files:
 .. `CHANGELOG.adoc` with an added section (`==`) titled with the release number, with a list of novelties and with a list of contributors.
@@ -9,18 +10,23 @@ Everything is manual at the moment.
 . Make a commit with both files and with the new version number:
 +
 ```
-git add CHANGELOG.adoc src/main/kotlin/bandcampcollectiondownloader/Constants.kt
+git add CHANGELOG.adoc src/main/kotlin/bandcampcollectiondownloader/core/Constants.kt
 git commit -m "Release vYYYY-MM-DD"
 ```
 +
 where `YYYY-MM-DD` is the current date.
 +
-. Push everything to the remote git repository:
+. Add a tag with the new version number:
 +
 ```
-git push
+git tag vYYYY-MM-DD
 ```
 +
+. Push everything to the remote git repository, including the new tag:
++
+```
+git push --tags
+```
 +
 . Wait for the CI pipeline build to be done, then open the corresponding pipeline page, then open the `build` build page, then *press the _Keep_ button.*
 . Press `Browse` and navigate to the `.jar` file until you find the URL, and copy the URL (or replace `<Job ID>` in the URL below). It should look like this:
@@ -32,7 +38,7 @@ https://framagit.org/Ezwen/bandcamp-collection-downloader/-/jobs/<Job ID>/artifa
 NOTE: Replacing the job ID in the URL above should work?
 +
 . Go to the _Releases_ page: https://framagit.org/Ezwen/bandcamp-collection-downloader/-/releases and press `New release`
-. In _Tag Name_, write `vYYYY-MM-DD` where `YYYY-MM-DD` is the current date.
+. In _Tag Name_, select the tag `vYYYY-MM-DD` where `YYYY-MM-DD` is the current date.
 . In _Release notes_, copy and paste the content of the release notes.
 . In _Release assets_, put the jar URL prepared previously with the title `Executable jar`.
 . Press _Create Release_.

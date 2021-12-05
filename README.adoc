@@ -9,30 +9,31 @@ $ java -jar ./bandcamp-collection-downloader.jar -d myMusicFolder myBandcampAcco
 image::img/example-output.gif[]
 
 ....
-
-Usage: <main class> [-ehv] [-c=<pathToCookiesFile>] [-d=<pathToDownloadFolder>] [-f=<audioFormat>] [-j=<jobs>] [-r=<retries>]
-                    [-t=<timeout>] <bandcampUser>
-      <bandcampUser>        The bandcamp user account from which all releases must be downloaded.
+Usage: java -jar bandcamp-collection-downloader.jar [-hnsV] [-c=<pathToCookiesFile>] [-d=<pathToDownloadFolder>]
+                                                    [-f=<audioFormat>] [-j=<jobs>] [-r=<retries>] [-t=<timeout>] <bandcampUser>
+Download items from an existing Bandcamp account collection.
+      <bandcampUser>        The Bandcamp user account from which all releases must be downloaded.
   -c, --cookies-file=<pathToCookiesFile>
-                            A file containing valid bandcamp credential cookies.
+                            A file containing valid Bandcamp credential cookies.
                             The file must either be obtained using the Firefox extension "Cookie Quick Manager" (https://addons.
                               mozilla.org/en-US/firefox/addon/cookie-quick-manager/) or using the Chrome extension "cookies.txt"
                               (https://chrome.google.com/webstore/detail/cookiestxt/njabckikapfpffapmjgojcnbfjonfjfg).
-                            If no cookies file is provided, cookies from the local Firefox installation are used (Windows and Linux).
+                            If no cookies file is provided, cookies from the local Firefox installation are used (Windows and
+                              Linux).
   -d, --download-folder=<pathToDownloadFolder>
                             The folder in which downloaded releases must be extracted.
                             The following structure is considered: <pathToDownloadFolder>/<artist>/<year> - <release>.
                             (default: current folder)
-  -e, --skip-failed-releases
-                            Skip releases that fail to download after the specified number of retries.
   -f, --audio-format=<audioFormat>
                             The chosen audio format of the files to download (default: vorbis).
                             Possible values: flac, wav, aac-hi, mp3-320, aiff-lossless, vorbis, mp3-v0, alac.
-  -h, --help                Display this help message.
+  -h, --help                Show this help message and exit.
   -j, --jobs=<jobs>         Amount of parallel jobs (threads) to use (default: 4).
+  -n, --dry-run             Perform a trial run with no changes made on the filesystem.
   -r, --retries=<retries>   Amount of retries for each HTTP connection (default: 3).
+  -s, --skip-hidden         Don't download hidden items of the collection.
   -t, --timeout=<timeout>   Timeout in ms before giving up an HTTP connection (default: 50000).
-  -v, --version             Display the version and exits.
+  -V, --version             Print version information and exit.
 ....
 
 === Bandcamp authentication
@@ -41,7 +42,9 @@ This tool does not manage authentication with Bandcamp servers, as they require 
 Hence, authentication must first be achieved using Firefox or Chrome. 
 Then there are two possibilities:
 
-- If using Firefox and running a Windows or Linux system (and if the `--cookies-file` parameter is not used), then the tool will automatically find the required cookies in the Firefox profile folder of the system user. *This approach is now incompatible with versions of Firefox prior to 74.0*.
+- If using Firefox and running a Windows or Linux system (and if the `--cookies-file` parameter is not used), then the tool will automatically find the required cookies in the Firefox profile folder of the system user. 
+Currently, the tool will _not_ use cookies from "container tabs", only cookies from regular tabs.
+*This approach is incompatible with versions of Firefox prior to 74.0*.
 - Else, Bandcamp cookies must be exported in JSON using the Firefox Addon https://addons.mozilla.org/en-US/firefox/addon/cookie-quick-manager/[Cookie Quick Manager] or in text format with this Chrome Addon https://chrome.google.com/webstore/detail/cookiestxt/njabckikapfpffapmjgojcnbfjonfjfg?hl=en[cookies.txt].
 The output, either txt from cookies.txt or JSON from Cookie Quick Manager, can then be used using the parameter `--cookies-file`.
 
