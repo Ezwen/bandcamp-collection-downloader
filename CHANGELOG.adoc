@@ -1,6 +1,6 @@
 = Changelog
 
-== NEXT
+== v2021-12-05 🎄️ 
 
 - Add `--dry-run` option to run as normal but without writing anything to the filesystem. 
 - Add a test case that uses a real bandcamp account called _bcdtest_ which owns one item.  
