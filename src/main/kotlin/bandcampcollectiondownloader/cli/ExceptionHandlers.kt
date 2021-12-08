@@ -19,7 +19,7 @@ object ExceptionHandlers {
         cmd.err.println(cmd.colorScheme.stackTraceText(ex))
     }
 
-    val isDebug: Boolean
+    val picoTraceEnabled: Boolean
         get() = "DEBUG".equals(System.getProperty("picocli.trace"), ignoreCase = true)
 
     internal class ParameterExceptionHandler : CommandLine.IParameterExceptionHandler {
@@ -28,7 +28,7 @@ object ExceptionHandlers {
             val err: PrintWriter = cmd.err
 
             // Print error
-            if (isDebug) {
+            if (picoTraceEnabled) {
                 printStackTrace(cmd, ex)
             } else {
                 printErrorMessage(cmd, ex)
@@ -49,7 +49,8 @@ object ExceptionHandlers {
             cmd: CommandLine,
             parseResult: CommandLine.ParseResult?
         ): Int {
-            if (isDebug) {
+            val isDebug : Boolean = parseResult?.matchedOption("debug")  != null
+            if (picoTraceEnabled || isDebug) {
                 printStackTrace(cmd, ex)
             } else {
                 printErrorMessage(cmd, ex)

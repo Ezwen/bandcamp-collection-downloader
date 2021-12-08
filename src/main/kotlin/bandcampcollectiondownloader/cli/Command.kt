@@ -81,6 +81,13 @@ class Command : Callable<Int> {
     )
     var dryRun: Boolean = false
 
+    @CommandLine.Option(
+        names = ["--debug"],
+        usageHelp = false,
+        description = ["Print the complete Java stack trace in case of error."]
+    )
+    var debug: Boolean = false
+
     override fun call(): Int {
         val io: IO = if (this.dryRun) DryIO() else RealIO()
         val app = BandcampCollectionDownloader(this, io)

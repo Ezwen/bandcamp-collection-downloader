@@ -8,7 +8,7 @@ import org.jsoup.Jsoup
 import java.util.*
 import java.util.regex.Pattern
 
-class BandcampAPIConnector constructor(private val bandcampUser: String, private val cookies: Map<String, String>,  private val skipHiddenItems : Boolean, private val timeout: Int, private val retries: Int) {
+class BandcampAPIConnector constructor(private val bandcampUser: String, private val cookies: Map<String, String>,  private val skipHiddenItems : Boolean, private val timeout: Int, private val retries: Int, private val debug : Boolean) {
 
     private var bandcampPageName: String? = null
     private val gson = Gson()
@@ -95,7 +95,7 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
                             throw e
                         }
                     }
-                }, retries)
+                }, retries, debug)
 
 
             // Get the JSON data blob hidden the the collection page, and parse it
@@ -153,7 +153,7 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
                         .method(Method.POST)
                         .requestBody("{\"fan_id\": $fanID, \"older_than_token\": \"$lastToken\"}")
                         .execute()
-                }, retries)
+                }, retries, debug)
 
             val parsedCollectionData = gson.fromJson(theRest!!.body(), ParsedCollectionItems::class.java)
             collection.putAll(parsedCollectionData.redownload_urls)
@@ -186,7 +186,7 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
 
         if (!this.saleItemsIDs2digitalItems.containsKey(saleItemID)) {
 
-            val saleItemURL = this.saleItemsIDs2saleItemsURLs[saleItemID]
+            val saleItemURL: String = this.saleItemsIDs2saleItemsURLs[saleItemID]!!
 
             // Get page content
             Util.retry({
@@ -208,7 +208,7 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
                     else
                         throw e
                 }
-            }, retries)
+            }, retries, debug)
 
         }
 
@@ -238,7 +238,7 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
                 .cookies(cookies)
                 .timeout(timeout)
                 .get().body().select("body")[0].text().toString()
-        }, retries)!!
+        }, retries, debug)!!
 
         val prefixPattern = Pattern.compile("""if\s*\(\s*window\.Downloads\s*\)\s*\{\s*Downloads\.statResult\s*\(\s*""")
         val suffixPattern = Pattern.compile("""\s*\)\s*};""")

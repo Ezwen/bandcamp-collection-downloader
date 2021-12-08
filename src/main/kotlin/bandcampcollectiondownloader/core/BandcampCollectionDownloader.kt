@@ -64,7 +64,7 @@ class BandcampCollectionDownloader(private val args: Command, private val io: IO
                 // Try to connect to bandcamp with the cookies
                 Util.log("Connecting to Bandcamp…")
                 val candidateConnector =
-                    BandcampAPIConnector(args.bandcampUser, cookies.content, args.skipHiddenItems, args.timeout, args.retries)
+                    BandcampAPIConnector(args.bandcampUser, cookies.content, args.skipHiddenItems, args.timeout, args.retries, args.debug)
                 candidateConnector.init()
                 val pageName = candidateConnector.getBandcampPageName()
                 Util.log("""Found "$pageName" with ${candidateConnector.getAllSaleItemIDs().size} items.""")
@@ -75,6 +75,9 @@ class BandcampCollectionDownloader(private val args: Command, private val io: IO
 
             } catch (e: Throwable) {
                 Util.log("""Cookies from ${cookies.source} did not work.""")
+                if (this.args.debug) {
+                    Util.log(e)
+                }
             }
         }
 
@@ -116,6 +119,9 @@ class BandcampCollectionDownloader(private val args: Command, private val io: IO
                     manageDownloadPage(connector, saleItemID, cache)
                 } catch (e: BandCampDownloaderError) {
                     Util.log("Could not download item: " + e.message)
+                    if (this.args.debug) {
+                        Util.log(e)
+                    }
                 }
             }
 
@@ -248,7 +254,7 @@ class BandcampCollectionDownloader(private val args: Command, private val io: IO
             if (saleItemId !in cache.getContent()) {
                 cache.add(saleItemId, printableReleaseName)
             }
-        }, args.retries, false)
+        }, args.retries, args.debug)
 
     }
 
