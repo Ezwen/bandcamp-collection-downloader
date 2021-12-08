@@ -54,38 +54,39 @@ class Command : Callable<Int> {
 
     @CommandLine.Option(
         names = ["-r", "--retries"],
-        usageHelp = false,
         description = ["Amount of retries for each HTTP connection (default: 3)."]
     )
     var retries: Int = 3
 
     @CommandLine.Option(
         names = ["-t", "--timeout"],
-        usageHelp = false,
         description = ["Timeout in ms before giving up an HTTP connection (default: 50000)."]
     )
     var timeout: Int = 50000
 
     @CommandLine.Option(
         names = ["-j", "--jobs"],
-        usageHelp = false,
         description = ["Amount of parallel jobs (threads) to use (default: 4)."]
     )
     var jobs: Int = 4
 
     @CommandLine.Option(
         names = ["-n", "--dry-run"],
-        usageHelp = false,
         description = ["Perform a trial run with no changes made on the filesystem."]
     )
     var dryRun: Boolean = false
 
     @CommandLine.Option(
         names = ["--debug"],
-        usageHelp = false,
         description = ["Print extra debug information, including the complete java stack trace on error."]
     )
     var debug: Boolean = false
+
+    @CommandLine.Option(
+        names = ["--no-covers-single-track"],
+        description = ["Do not try to download covers for single-track releases. Useful when the ISP is blocking the Bandcamp server providing covers."]
+    )
+    var noCoversSingleTrack: Boolean = false
 
     override fun call(): Int {
         val logger = Logger(this.debug)

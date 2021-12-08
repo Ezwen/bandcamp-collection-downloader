@@ -298,7 +298,7 @@ class BandcampCollectionDownloader(
 
             // If this is a zip, we unzip
             if (!isSingleTrack) {
-                logger.debug("This is a multiple track release: unzipping the downloaded file")
+                logger.debug("Multiple track release: unzipping the downloaded file.")
 
                 // Unzip
                 try {
@@ -311,8 +311,12 @@ class BandcampCollectionDownloader(
 
             // Else if this is a single track, we just fetch the cover
             else {
-                logger.debug("This is a single track release: fetching the cover")
-                io.downloadFile(coverURL, releaseFolderPath, "cover.jpg", timeout)
+                if (this.args.noCoversSingleTrack) {
+                    logger.debug("Fetching the cover of single track releases disabled. Skipping.")
+                } else {
+                    logger.debug("Single track release: fetching the cover.")
+                    io.downloadFile(coverURL, releaseFolderPath, "cover.jpg", timeout)
+                }
             }
             return true
         } else {
