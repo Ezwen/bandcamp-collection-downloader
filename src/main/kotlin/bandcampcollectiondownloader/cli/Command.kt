@@ -2,9 +2,8 @@ package bandcampcollectiondownloader.cli
 
 import bandcampcollectiondownloader.core.BandcampCollectionDownloader
 import bandcampcollectiondownloader.core.Constants
-import bandcampcollectiondownloader.util.DryIO
-import bandcampcollectiondownloader.util.IO
-import bandcampcollectiondownloader.util.RealIO
+import bandcampcollectiondownloader.core.CookiesManagement
+import bandcampcollectiondownloader.util.*
 import picocli.CommandLine
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -84,13 +83,16 @@ class Command : Callable<Int> {
     @CommandLine.Option(
         names = ["--debug"],
         usageHelp = false,
-        description = ["Print the complete Java stack trace in case of error."]
+        description = ["Print extra debug information, including the complete java stack trace on error."]
     )
     var debug: Boolean = false
 
     override fun call(): Int {
-        val io: IO = if (this.dryRun) DryIO() else RealIO()
-        val app = BandcampCollectionDownloader(this, io)
+        val logger = Logger(this.debug)
+        val io: IO = if (this.dryRun) DryIO(logger) else RealIO(logger)
+        val util = Util(logger)
+        val cookiesManagement = CookiesManagement(util)
+        val app = BandcampCollectionDownloader(this, io, util, logger, cookiesManagement)
         app.downloadAll()
         return 0
     }

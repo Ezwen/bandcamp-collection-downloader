@@ -11,9 +11,7 @@ import java.text.DecimalFormat
 import java.util.concurrent.ConcurrentHashMap
 import javax.mail.internet.ContentDisposition
 
-class RealIO(dryRun: Boolean = false) : IO {
-
-    private val dryRun : Boolean = dryRun
+class RealIO(private val logger: Logger) : IO {
 
     override fun createFile(path: Path) {
         Files.createFile(path)
@@ -28,13 +26,14 @@ class RealIO(dryRun: Boolean = false) : IO {
     }
 
     private val BUFFER_SIZE = 4096
-
     private val parallelDownloadsProgresses: MutableMap<String, String> = ConcurrentHashMap()
 
     /**
      * Initially from http://www.codejava.net/java-se/networking/use-httpurlconnection-to-download-file-from-an-http-url
      */
     override fun downloadFile(fileURL: String, saveDir: Path, optionalFileName: String, timeout: Int): Path {
+
+        logger.debug("Starting download of: $fileURL")
 
         // Prepare HTTP connection
         val url = URL(fileURL)
@@ -94,7 +93,7 @@ class RealIO(dryRun: Boolean = false) : IO {
                         "Progress: "
                     }
                 val message = "$prefix$allProgresses"
-                print(Util.fillWithBlanks(message) + "\r")
+                logger.logFullLine(message)
 
                 // Download a new chunk
                 outputStream.write(buffer, 0, bytesRead)
@@ -107,7 +106,7 @@ class RealIO(dryRun: Boolean = false) : IO {
 
             // Clean the console output if needed
             if (parallelDownloadsProgresses.isEmpty())
-                print(Util.fillWithBlanks("") + "\r")
+                logger.logFullLine("")
 
             // Close streams and connections
             outputStream.close()

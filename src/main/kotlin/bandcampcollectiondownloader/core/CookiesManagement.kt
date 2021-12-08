@@ -28,7 +28,7 @@ fun parseCookiesText(fileData: String): Map<String, String> {
 }
 
 
-object CookiesManagement {
+class CookiesManagement(private val util : Util) {
 
     private val gson = Gson()
 
@@ -99,11 +99,11 @@ object CookiesManagement {
         // Find Firefox configuration folder
         val firefoxConfDirPath: Path?
         firefoxConfDirPath = when {
-            Util.isUnix() -> {
+            util.isUnix() -> {
                 val homeDir = Paths.get(System.getenv()["HOME"]!!)
                 homeDir.resolve(".mozilla/firefox")
             }
-            Util.isWindows() -> {
+            util.isWindows() -> {
                 val appdata = Paths.get(System.getenv("APPDATA"))
                 appdata.resolve("mozilla/firefox")
             }

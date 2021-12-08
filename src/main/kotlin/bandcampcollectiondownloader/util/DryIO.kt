@@ -4,8 +4,9 @@ import bandcampcollectiondownloader.core.BandCampDownloaderError
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
+import kotlin.collections.ArrayList
 
-class DryIO : IO {
+class DryIO (private val logger : Logger) : IO {
 
     private val createdFiles: MutableList<Path> = ArrayList()
     private val unzippedFiles: MutableList<Path> = ArrayList()
@@ -21,7 +22,7 @@ class DryIO : IO {
     }
 
     private fun log(message: String) {
-        Util.log("""[dry run] Would $message""")
+        logger.log("""[dry run] Would $message""")
     }
 
     override fun createFile(path: Path) {

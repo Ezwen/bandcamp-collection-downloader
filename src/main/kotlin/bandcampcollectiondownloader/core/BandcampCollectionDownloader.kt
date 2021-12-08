@@ -2,6 +2,7 @@ package bandcampcollectiondownloader.core
 
 import bandcampcollectiondownloader.cli.Command
 import bandcampcollectiondownloader.util.IO
+import bandcampcollectiondownloader.util.Logger
 import bandcampcollectiondownloader.util.Util
 import java.nio.file.Files
 import java.nio.file.Path
@@ -14,7 +15,13 @@ import java.util.*
 import java.util.concurrent.*
 import java.util.stream.Collectors
 
-class BandcampCollectionDownloader(private val args: Command, private val io: IO) {
+class BandcampCollectionDownloader(
+    private val args: Command,
+    private val io: IO,
+    private val util: Util,
+    private val logger: Logger,
+    private val cookiesManagement: CookiesManagement
+) {
 
     class Cache constructor(private val path: Path, private val io: IO) {
         fun getContent(): List<String> {
@@ -37,47 +44,52 @@ class BandcampCollectionDownloader(private val args: Command, private val io: IO
      * Core function called from the Main function.
      */
     fun downloadAll() {
-        Util.log("Target Bandcamp account: " + args.bandcampUser)
-        Util.log("Target download folder: " + args.pathToDownloadFolder.toAbsolutePath().normalize())
-        Util.log("Target audio format: " + args.audioFormat)
-        Util.logSeparator()
+        logger.log("Target Bandcamp account: " + args.bandcampUser)
+        logger.log("Target download folder: " + args.pathToDownloadFolder.toAbsolutePath().normalize())
+        logger.log("Target audio format: " + args.audioFormat)
+        logger.logSeparator()
 
         // Gather cookies
         val cookiesCandidates: MutableList<CookiesManagement.Cookies> = ArrayList()
         if (args.pathToCookiesFile != null) {
             // Parse JSON cookies (obtained with "Cookie Quick Manager" Firefox addon)
-            Util.log("Loading provided cookies file…")
-            cookiesCandidates.add(CookiesManagement.retrieveCookiesFromFile(args.pathToCookiesFile!!))
+            logger.log("Loading provided cookies file…")
+            cookiesCandidates.add(cookiesManagement.retrieveCookiesFromFile(args.pathToCookiesFile!!))
         } else {
             // Try to find cookies stored in default firefox profile
-            Util.log("No provided cookies file, using Firefox cookies…")
-            cookiesCandidates.addAll(CookiesManagement.retrieveFirefoxCookies())
+            logger.log("No provided cookies file, using Firefox cookies…")
+            cookiesCandidates.addAll(cookiesManagement.retrieveFirefoxCookies())
         }
 
         // Try to connect to bandcamp with each provided cookies
         var connector: BandcampAPIConnector? = null
         for (cookies in cookiesCandidates) {
             try {
-                Util.log("Trying cookies from: " + cookies.source)
-                Util.logSeparator()
+                logger.log("Trying cookies from: " + cookies.source)
+                logger.logSeparator()
 
                 // Try to connect to bandcamp with the cookies
-                Util.log("Connecting to Bandcamp…")
+                logger.log("Connecting to Bandcamp…")
                 val candidateConnector =
-                    BandcampAPIConnector(args.bandcampUser, cookies.content, args.skipHiddenItems, args.timeout, args.retries, args.debug)
+                    BandcampAPIConnector(
+                        args.bandcampUser,
+                        cookies.content,
+                        args.skipHiddenItems,
+                        args.timeout,
+                        args.retries,
+                        util
+                    )
                 candidateConnector.init()
                 val pageName = candidateConnector.getBandcampPageName()
-                Util.log("""Found "$pageName" with ${candidateConnector.getAllSaleItemIDs().size} items.""")
+                logger.log("""Found "$pageName" with ${candidateConnector.getAllSaleItemIDs().size} items.""")
 
                 // If we reach this point then the cookies worked and we have a working connection
                 connector = candidateConnector
                 break
 
             } catch (e: Throwable) {
-                Util.log("""Cookies from ${cookies.source} did not work.""")
-                if (this.args.debug) {
-                    Util.log(e)
-                }
+                logger.log("""Cookies from ${cookies.source} did not work.""")
+                logger.debug(e)
             }
         }
 
@@ -94,14 +106,14 @@ class BandcampCollectionDownloader(private val args: Command, private val io: IO
         val itemsToDownload = connector.getAllSaleItemIDs().filter { saleItemId -> saleItemId !in cacheContent }
         val alreadyDownloadedItemsCount = connector.getAllSaleItemIDs().size - itemsToDownload.size
         if (alreadyDownloadedItemsCount > 0) {
-            Util.log(
+            logger.log(
                 "Ignoring $alreadyDownloadedItemsCount already downloaded items (based on '${
                     cacheFilePath.toAbsolutePath().normalize()
                 }')."
             )
         }
 
-        Util.logSeparator()
+        logger.logSeparator()
 
         // Prepare for parallel downloads
         val queue = ArrayBlockingQueue<Runnable>(50000)
@@ -113,15 +125,13 @@ class BandcampCollectionDownloader(private val args: Command, private val io: IO
             // Prepare a task to run in a thread or not
             val task = Runnable {
                 val itemNumber = itemsToDownload.indexOf(saleItemID) + 1
-                Util.log("Managing item $itemNumber/${itemsToDownload.size}")
+                logger.log("Managing item $itemNumber/${itemsToDownload.size}")
 
                 try {
                     manageDownloadPage(connector, saleItemID, cache)
                 } catch (e: BandCampDownloaderError) {
-                    Util.log("Could not download item: " + e.message)
-                    if (this.args.debug) {
-                        Util.log(e)
-                    }
+                    logger.log("Could not download item: " + e.message)
+                    logger.debug(e)
                 }
             }
 
@@ -145,7 +155,7 @@ class BandcampCollectionDownloader(private val args: Command, private val io: IO
 
         // If null, then the download page is simply invalid and not usable anymore, therefore it can be added to the cache
         if (digitalItem == null) {
-            Util.log("Sale Item ID $saleItemId cannot be downloaded anymore (maybe a refund?); skipping")
+            logger.log("Sale Item ID $saleItemId cannot be downloaded anymore (maybe a refund?); skipping")
             cache.add(saleItemId, "UNKNOWN")
             return
         }
@@ -167,24 +177,24 @@ class BandcampCollectionDownloader(private val args: Command, private val io: IO
 
         val printableReleaseName = """"${digitalItem.title}" ($releaseYear) by ${digitalItem.artist}"""
 
-        Util.log("""Found release $printableReleaseName (Bandcamp ID: $saleItemId).""")
+        logger.log("""Found release $printableReleaseName (Bandcamp ID: $saleItemId).""")
 
         if (releaseUTC != null && releaseUTC.toInstant() > Instant.now()) {
-            Util.log("$printableReleaseName is a preorder; skipping.")
+            logger.log("$printableReleaseName is a preorder; skipping.")
             return
         }
 
         // Get data (2)
-        val isSingleTrack: Boolean = (digitalItem.download_type == "t" || digitalItem.download_type_str == "track" || 
-            digitalItem.item_type == "track" )
+        val isSingleTrack: Boolean = (digitalItem.download_type == "t" || digitalItem.download_type_str == "track" ||
+                digitalItem.item_type == "track")
 
         // Exit if no download URL can be found with the chosen audio format
         connector.retrieveRealDownloadURL(saleItemId, args.audioFormat)
             ?: throw BandCampDownloaderError("No URL found for item (maybe the release has no digital item, or the provided download format is invalid)")
 
         // Replace invalid chars by similar unicode chars
-        releasetitle = Util.replaceInvalidCharsByUnicode(releasetitle)
-        artist = Util.replaceInvalidCharsByUnicode(artist)
+        releasetitle = util.replaceInvalidCharsByUnicode(releasetitle)
+        artist = util.replaceInvalidCharsByUnicode(artist)
 
         // Prepare artist and release folder paths
         val downloadFolderPath = Paths.get("${args.pathToDownloadFolder}")
@@ -230,7 +240,7 @@ class BandcampCollectionDownloader(private val args: Command, private val io: IO
                 } else {
                     artistFolderPath.resolve(releaseFolderName)
                 }
-                Util.log(
+                logger.log(
                     "Using existing folder found with different case: " + releaseFolderPath.toAbsolutePath().normalize()
                         .toString()
                 )
@@ -241,20 +251,20 @@ class BandcampCollectionDownloader(private val args: Command, private val io: IO
         val coverURL = connector.getCoverURL(saleItemId)
 
         // Download release, with as many retries as configured
-        Util.log("Starting the download of $printableReleaseName.")
-        Util.retry({
+        logger.log("Starting the download of $printableReleaseName.")
+        util.retry({
             val downloadUrl = connector.retrieveRealDownloadURL(saleItemId, args.audioFormat)!!
             val downloaded =
                 downloadRelease(downloadUrl, artistFolderPath, releaseFolderPath, isSingleTrack, args.timeout, coverURL)
             if (downloaded) {
-                Util.log("$printableReleaseName successfully downloaded.")
+                logger.log("$printableReleaseName successfully downloaded.")
             } else {
-                Util.log("$printableReleaseName already exists on disk, skipping.")
+                logger.log("$printableReleaseName already exists on disk, skipping.")
             }
             if (saleItemId !in cache.getContent()) {
                 cache.add(saleItemId, printableReleaseName)
             }
-        }, args.retries, args.debug)
+        }, args.retries)
 
     }
 
@@ -288,6 +298,7 @@ class BandcampCollectionDownloader(private val args: Command, private val io: IO
 
             // If this is a zip, we unzip
             if (!isSingleTrack) {
+                logger.debug("This is a multiple track release: unzipping the downloaded file")
 
                 // Unzip
                 try {
@@ -300,6 +311,7 @@ class BandcampCollectionDownloader(private val args: Command, private val io: IO
 
             // Else if this is a single track, we just fetch the cover
             else {
+                logger.debug("This is a single track release: fetching the cover")
                 io.downloadFile(coverURL, releaseFolderPath, "cover.jpg", timeout)
             }
             return true

@@ -8,7 +8,14 @@ import org.jsoup.Jsoup
 import java.util.*
 import java.util.regex.Pattern
 
-class BandcampAPIConnector constructor(private val bandcampUser: String, private val cookies: Map<String, String>,  private val skipHiddenItems : Boolean, private val timeout: Int, private val retries: Int, private val debug : Boolean) {
+class BandcampAPIConnector constructor(
+    private val bandcampUser: String,
+    private val cookies: Map<String, String>,
+    private val skipHiddenItems: Boolean,
+    private val timeout: Int,
+    private val retries: Int,
+    private val util: Util
+) {
 
     private var bandcampPageName: String? = null
     private val gson = Gson()
@@ -82,7 +89,7 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
 
             // Get collection page with cookies, hence with download links
             val doc =
-                Util.retry({
+                util.retry({
                     try {
                         Jsoup.connect("https://bandcamp.com/$bandcampUser")
                             .timeout(timeout)
@@ -95,7 +102,7 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
                             throw e
                         }
                     }
-                }, retries, debug)
+                }, retries)
 
 
             // Get the JSON data blob hidden the the collection page, and parse it
@@ -114,18 +121,31 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
             if (skipHiddenItems) {
                 collection.entries.retainAll { collectionEntry ->
                     !fanPageBlob.item_cache.hidden.values.any { hiddenItem ->
-                        collectionEntry.value.contains(hiddenItem.sale_item_id) }
+                        collectionEntry.value.contains(hiddenItem.sale_item_id)
+                    }
                 }
             }
 
             // Get the rest of the non-hidden collection
             if (fanPageBlob.collection_data.item_count > fanPageBlob.collection_data.batch_size) {
-                collection.putAll(retrieveDownloadURLs(fanPageBlob.fan_data.fan_id, fanPageBlob.collection_data, "collection_items"))
+                collection.putAll(
+                    retrieveDownloadURLs(
+                        fanPageBlob.fan_data.fan_id,
+                        fanPageBlob.collection_data,
+                        "collection_items"
+                    )
+                )
             }
 
             // If needed, get the rest of the hidden collection
-            if( (!skipHiddenItems) && (fanPageBlob.hidden_data.item_count > fanPageBlob.hidden_data.batch_size)) {
-                collection.putAll(retrieveDownloadURLs(fanPageBlob.fan_data.fan_id, fanPageBlob.hidden_data, "hidden_items"))
+            if ((!skipHiddenItems) && (fanPageBlob.hidden_data.item_count > fanPageBlob.hidden_data.batch_size)) {
+                collection.putAll(
+                    retrieveDownloadURLs(
+                        fanPageBlob.fan_data.fan_id,
+                        fanPageBlob.hidden_data,
+                        "hidden_items"
+                    )
+                )
             }
 
             this.saleItemsIDs2saleItemsURLs.putAll(collection)
@@ -135,8 +155,8 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
     }
 
     private fun retrieveDownloadURLs(
-        fanID : String,
-        collectionData : CollectionData,
+        fanID: String,
+        collectionData: CollectionData,
         collectionName: String
     ): HashMap<String, String> {
         var lastToken = collectionData.last_token
@@ -145,7 +165,7 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
         while (moreAvailable) {
             // Append download pages from this api endpoint as well
             val theRest =
-                Util.retry({
+                util.retry({
                     Jsoup.connect("https://bandcamp.com/api/fancollection/1/${collectionName}")
                         .ignoreContentType(true)
                         .timeout(timeout)
@@ -153,7 +173,7 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
                         .method(Method.POST)
                         .requestBody("{\"fan_id\": $fanID, \"older_than_token\": \"$lastToken\"}")
                         .execute()
-                }, retries, debug)
+                }, retries)
 
             val parsedCollectionData = gson.fromJson(theRest!!.body(), ParsedCollectionItems::class.java)
             collection.putAll(parsedCollectionData.redownload_urls)
@@ -189,7 +209,7 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
             val saleItemURL: String = this.saleItemsIDs2saleItemsURLs[saleItemID]!!
 
             // Get page content
-            Util.retry({
+            util.retry({
                 try {
                     val downloadPage = Jsoup.connect(saleItemURL)
                         .cookies(cookies)
@@ -208,7 +228,7 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
                     else
                         throw e
                 }
-            }, retries, debug)
+            }, retries)
 
         }
 
@@ -233,12 +253,12 @@ class BandcampAPIConnector constructor(private val bandcampUser: String, private
             .replace("http:", "https:") + "&.vrs=1" + "&.rand=" + random.nextInt()
 
         // Get statdownload JSON
-        val statedownloadUglyBody: String = Util.retry({
+        val statedownloadUglyBody: String = util.retry({
             Jsoup.connect(statdownloadURL)
                 .cookies(cookies)
                 .timeout(timeout)
                 .get().body().select("body")[0].text().toString()
-        }, retries, debug)!!
+        }, retries)!!
 
         val prefixPattern = Pattern.compile("""if\s*\(\s*window\.Downloads\s*\)\s*\{\s*Downloads\.statResult\s*\(\s*""")
         val suffixPattern = Pattern.compile("""\s*\)\s*};""")
