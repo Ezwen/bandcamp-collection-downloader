@@ -31,7 +31,7 @@ class Logger(private val debug: Boolean) {
     }
 
     fun debug(t: Throwable) {
-        this.debug("[DEBUG]" + this.extractStackTrace(t))
+        this.debug(this.extractStackTrace(t))
     }
 
     fun log(s: String) {
