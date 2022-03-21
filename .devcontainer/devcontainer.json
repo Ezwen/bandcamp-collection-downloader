@@ -36,6 +36,7 @@
 	},
 
 	// From here, options required to make it work with rootless podman + selinux, instead of Docker.
+	// See https://github.com/microsoft/vscode-remote-release/issues/1333
 	"workspaceMount": "",
 	"runArgs": [
 		"--volume=${localWorkspaceFolder}:/workspaces/${localWorkspaceFolderBasename}:Z",
