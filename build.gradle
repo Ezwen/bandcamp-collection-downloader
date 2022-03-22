@@ -34,6 +34,9 @@ compileTestKotlin {
 }
 
 task fatJar(type: Jar) {
+		group = 'Build'
+		description = 'Generates a self-contained, executable JAR.'
+
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     manifest {
         attributes 'Main-Class': 'bandcampcollectiondownloader.main.MainKt'
