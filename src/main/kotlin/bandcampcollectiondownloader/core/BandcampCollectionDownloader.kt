@@ -228,12 +228,12 @@ class BandcampCollectionDownloader(
         // If artist or release folder exists with different case, use it instead of the planned one
         if (Files.isDirectory(downloadFolderPath) && !Files.isDirectory(artistFolderPath)) {
             val candidateArtistFolders = Files.list(downloadFolderPath)
-                .filter { f -> Files.isDirectory(f) && f.fileName.toString().endsWith(artist, true) }
+                .filter { f -> Files.isDirectory(f) && f.fileName.toString().equals(artist, true) }
                 .collect(Collectors.toList())
             if (candidateArtistFolders.isNotEmpty()) {
                 artistFolderPath = candidateArtistFolders[0]
                 val candidateReleaseFolders = Files.list(artistFolderPath)
-                    .filter { f -> Files.isDirectory(f) && f.fileName.toString().endsWith(releaseFolderName, true) }
+                    .filter { f -> Files.isDirectory(f) && f.fileName.toString().equals(releaseFolderName, true) }
                     .collect(Collectors.toList())
                 releaseFolderPath = if (candidateReleaseFolders.isNotEmpty()) {
                     candidateReleaseFolders[0]
