@@ -17,7 +17,7 @@ Download items from an existing Bandcamp account collection.
                             A file containing valid Bandcamp credential cookies.
                             The file must either be obtained using the Firefox extension "Cookie Quick Manager" (https://addons.
                               mozilla.org/en-US/firefox/addon/cookie-quick-manager/) or using the Chrome extension "cookies.txt"
-                              (https://chrome.google.com/webstore/detail/cookiestxt/njabckikapfpffapmjgojcnbfjonfjfg).
+                              (https://chrome.google.com/webstore/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc).
                             If no cookies file is provided, cookies from the local Firefox installation are used (Windows and
                               Linux).
   -d, --download-folder=<pathToDownloadFolder>
