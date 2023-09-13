@@ -28,7 +28,8 @@ class Command : Callable<Int> {
         names = ["--cookies-file", "-c"], required = false,
         description = [
             "A file containing valid Bandcamp credential cookies.",
-            """The file must either be obtained using the Firefox extension "Cookie Quick Manager" (https://addons.mozilla.org/en-US/firefox/addon/cookie-quick-manager/) or using the Chrome extension "cookies.txt" (https://chrome.google.com/webstore/detail/cookiestxt/njabckikapfpffapmjgojcnbfjonfjfg).""",
+            """The file must either be obtained using the Firefox extension "Cookie Quick Manager" (https://addons.mozilla.org/en-US/firefox/addon/cookie-quick-manager/) or using the Chrome extension "Get cookies.txt LOCALLY"
+            (https://chrome.google.com/webstore/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc).""",
             "If no cookies file is provided, cookies from the local Firefox installation are used (Windows and Linux)."
         ]
     )
