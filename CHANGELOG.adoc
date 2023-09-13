@@ -4,6 +4,7 @@
 
 - Fix wrong logic when finding existing release or artist folders − thank you to *donaldinho*!
 - Replace suggested use of the _cookies.txt_ Chrome extension with the _Get cookies.txt LOCALLY_ extension − thank you to *Skoddiethecat*!
+- Add group and description to Gradle task − thank you to *nicoo*!
 
 
 == v2021-12-05 🎄️ 
