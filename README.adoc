@@ -16,7 +16,7 @@ Download items from an existing Bandcamp account collection.
   -c, --cookies-file=<pathToCookiesFile>
                             A file containing valid Bandcamp credential cookies.
                             The file must either be obtained using the Firefox extension "Cookie Quick Manager" (https://addons.
-                              mozilla.org/en-US/firefox/addon/cookie-quick-manager/) or using the Chrome extension "cookies.txt"
+                              mozilla.org/en-US/firefox/addon/cookie-quick-manager/) or using the Chrome extension "Get cookies.txt LOCALLY"
                               (https://chrome.google.com/webstore/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc).
                             If no cookies file is provided, cookies from the local Firefox installation are used (Windows and
                               Linux).
@@ -45,8 +45,8 @@ Then there are two possibilities:
 - If using Firefox and running a Windows or Linux system (and if the `--cookies-file` parameter is not used), then the tool will automatically find the required cookies in the Firefox profile folder of the system user. 
 Currently, the tool will _not_ use cookies from "container tabs", only cookies from regular tabs.
 *This approach is incompatible with versions of Firefox prior to 74.0*.
-- Else, Bandcamp cookies must be exported in JSON using the Firefox Addon https://addons.mozilla.org/en-US/firefox/addon/cookie-quick-manager/[Cookie Quick Manager] or in text format with this Chrome Addon https://chrome.google.com/webstore/detail/cookiestxt/njabckikapfpffapmjgojcnbfjonfjfg?hl=en[cookies.txt].
-The output, either txt from cookies.txt or JSON from Cookie Quick Manager, can then be used using the parameter `--cookies-file`.
+- Else, Bandcamp cookies must be exported in JSON using the Firefox Addon https://addons.mozilla.org/en-US/firefox/addon/cookie-quick-manager/[Cookie Quick Manager] or in text format with the Chrome Addon https://chrome.google.com/webstore/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc[Get cookies.txt LOCALLY].
+The output, either txt from _Get cookies.txt LOCALLY_ or JSON from _Cookie Quick Manager_, can then be used using the parameter `--cookies-file`.
 
 === Usage
 
