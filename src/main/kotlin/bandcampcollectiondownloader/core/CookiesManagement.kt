@@ -12,6 +12,7 @@ import java.nio.file.Paths
 import java.sql.Connection
 import java.sql.DriverManager
 import java.time.Instant
+import kotlin.io.path.exists
 
 fun parseCookiesText(fileData: String): Map<String, String> {
     val lines = fileData.split('\n')
@@ -101,7 +102,11 @@ class CookiesManagement(private val util : Util) {
         firefoxConfDirPath = when {
             util.isUnix() -> {
                 val homeDir = Paths.get(System.getenv()["HOME"]!!)
-                homeDir.resolve(".mozilla/firefox")
+                if (homeDir.resolve(".mozilla/firefox").exists()) {
+                    homeDir.resolve(".mozilla/firefox")
+                } else {
+                    homeDir.resolve("snap/firefox/common/.mozilla/firefox")
+                }
             }
             util.isWindows() -> {
                 val appdata = Paths.get(System.getenv("APPDATA"))
