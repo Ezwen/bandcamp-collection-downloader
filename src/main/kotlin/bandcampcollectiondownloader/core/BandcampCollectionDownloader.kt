@@ -14,6 +14,7 @@ import java.time.temporal.ChronoField
 import java.util.*
 import java.util.concurrent.*
 import java.util.stream.Collectors
+import java.util.concurrent.TimeUnit
 
 class BandcampCollectionDownloader(
     private val args: Command,
@@ -150,7 +151,7 @@ class BandcampCollectionDownloader(
     }
 
     private fun manageDownloadPage(connector: BandcampAPIConnector, saleItemId: String, cache: Cache) {
-
+        TimeUnit.SECONDS.sleep((1 + Random().nextInt(2)).toLong())
         val digitalItem = connector.retrieveDigitalItemData(saleItemId)
 
         // If null, then the download page is simply invalid and not usable anymore, therefore it can be added to the cache
