@@ -22,4 +22,7 @@ object Constants {
             '.' to '․',
             ' ' to ' ',
     )
+    val UNICODE_STRING_REPLACEMENTS = hashMapOf<String, String>(
+        "\u200B" to ""
+    )
 }
