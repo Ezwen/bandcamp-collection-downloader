@@ -7,6 +7,8 @@ import org.jsoup.HttpStatusException
 import org.jsoup.Jsoup
 import java.util.*
 import java.util.regex.Pattern
+import java.util.concurrent.TimeUnit
+
 
 class BandcampAPIConnector constructor(
     private val bandcampUser: String,
@@ -166,6 +168,7 @@ class BandcampAPIConnector constructor(
             // Append download pages from this api endpoint as well
             val theRest =
                 util.retry({
+                    TimeUnit.SECONDS.sleep((1 + Random().nextInt(2)).toLong())
                     Jsoup.connect("https://bandcamp.com/api/fancollection/1/${collectionName}")
                         .ignoreContentType(true)
                         .timeout(timeout)
