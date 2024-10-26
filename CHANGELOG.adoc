@@ -3,9 +3,9 @@
 == Next release
 
 - [build] remove devcontainer configuration (not maintained)
-- [build] fix gradle version in gradle-docker wrapper (#53)
-- [fix] if final char is a period or space, replace with a lookalike character (#51)
-- [feat] also search cookies in Firefox Snap configuration folder
+- [build] fix gradle version in gradle-docker wrapper (#53) − thank you to *Oliver Gassner* !
+- [fix] if final char is a period or space, replace with a lookalike character (#51) − thank you to *Eric Wasylishen*  !
+- [feat] also search cookies in Firefox Snap configuration folder − thank you to *ligi* !
 - Switch to Gradle 7 for builds
 - Fix wrong logic when finding existing release or artist folders − thank you to *donaldinho*!
 - Replace suggested use of the _cookies.txt_ Chrome extension with the _Get cookies.txt LOCALLY_ extension − thank you to *Skoddiethecat*!
