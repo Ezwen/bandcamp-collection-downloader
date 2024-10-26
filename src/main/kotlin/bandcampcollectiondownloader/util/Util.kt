@@ -21,6 +21,13 @@ class Util(private val logger: Logger) {
         for ((old, new) in Constants.UNICODE_CHARS_REPLACEMENTS) {
             result = result.replace(old, new)
         }
+
+        if (result.isNotEmpty()) {
+            if (result.last() in Constants.TRAILING_CHAR_REPLACEMENTS.keys) {
+                result = result.dropLast(1) + Constants.TRAILING_CHAR_REPLACEMENTS[result.last()]
+            }
+        }
+
         return result
     }
 

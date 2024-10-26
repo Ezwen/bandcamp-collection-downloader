@@ -15,4 +15,11 @@ object Constants {
             '?' to '？',
             '|' to '∣'
     )
+
+    // On Windows, period and space are allowed, but not at the end of a file/directory name.
+    // See: https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file
+    val TRAILING_CHAR_REPLACEMENTS = hashMapOf<Char, Char>(
+            '.' to '․',
+            ' ' to ' ',
+    )
 }
