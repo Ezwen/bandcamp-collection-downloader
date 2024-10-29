@@ -2,9 +2,11 @@ package bandcampcollectiondownloader.util
 
 import bandcampcollectiondownloader.core.BandCampDownloaderError
 import bandcampcollectiondownloader.core.Constants
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.*
 
-class Util(private val logger: Logger) {
+open class Util(private val logger: Logger) {
 
     fun isUnix(): Boolean {
         val os = System.getProperty("os.name").lowercase(Locale.getDefault())
@@ -47,6 +49,10 @@ class Util(private val logger: Logger) {
         }
         val message = "Could not perform task after $retries retries."
         throw BandCampDownloaderError(message)
+    }
+
+    open fun getUnixHomePath(): Path {
+        return Paths.get(System.getenv()["HOME"]!!)
     }
 
 

@@ -101,7 +101,7 @@ class CookiesManagement(private val util : Util) {
         val firefoxConfDirPath: Path?
         firefoxConfDirPath = when {
             util.isUnix() -> {
-                val homeDir = Paths.get(System.getenv()["HOME"]!!)
+                val homeDir = util.getUnixHomePath()
                 if (homeDir.resolve(".mozilla/firefox").exists()) {
                     homeDir.resolve(".mozilla/firefox")
                 } else {
