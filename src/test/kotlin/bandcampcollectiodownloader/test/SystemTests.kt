@@ -38,6 +38,10 @@ class SystemTests {
         return BandcampCollectionDownloader(command,dryIO,util,logger,cookies)
     }
 
+    private fun createDownloaderNoHomeDir(command: Command): BandcampCollectionDownloader {
+        return BandcampCollectionDownloader(command,dryIO,util,logger,cookies)
+    }
+
     @Test
     fun testErrorCookiesFileNotFound() {
         val command = Command()
@@ -99,13 +103,12 @@ class SystemTests {
 
     @Test
     fun testErrorNoCookiesAtAll() {
-        addToEnv("HOME", "NOPE")
         val command = Command()
         command.pathToCookiesFile = null
         command.bandcampUser = "bli"
         command.timeout = 5000
         assertThrows<BandCampDownloaderError> {
-            createDownloader(command).downloadAll()
+            createDownloaderNoHomeDir(command).downloadAll()
         }
     }
 
@@ -124,19 +127,7 @@ class SystemTests {
 
     @Throws(Exception::class)
     fun addToEnv(key: String, value: String) {
-        val classes = Collections::class.java.declaredClasses
-        val env = System.getenv()
-        for (cl in classes) {
-            if ("java.util.Collections\$UnmodifiableMap" == cl.name) {
-                val field = cl.getDeclaredField("m")
-                field.isAccessible = true
-                val obj = field.get(env)
-
-                @Suppress("UNCHECKED_CAST")
-                val map = obj as MutableMap<String, String>
-                map[key] = value
-            }
-        }
+        System.getenv()[key] = value
     }
 
 
