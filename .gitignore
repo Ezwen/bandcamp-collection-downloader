@@ -13,3 +13,4 @@ bin
 .settings
 .vscode
 trash
+.gitlab-ci-local
