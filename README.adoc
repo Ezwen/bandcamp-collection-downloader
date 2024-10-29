@@ -76,7 +76,7 @@ If you want to be notified of new releases, you can subscribe to link:https://fr
 
 === Compiling
 
-The tool is written in Kotlin and compilation is handled by Gradle 7.
+The tool is written in Kotlin and compilation is handled by Gradle 8.
 A Gradle task named `fatJar` is available to build a standalone executable jar with all dependencies:
 
 ....
