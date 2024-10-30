@@ -20,9 +20,6 @@ open class Util(private val logger: Logger) {
 
     fun replaceInvalidCharsByUnicode(s: String): String {
         var result: String = s
-        for ((old, new) in Constants.UNICODE_STRING_REPLACEMENTS) {
-            result = result.replace(old, new)
-        }
         for ((old, new) in Constants.UNICODE_CHARS_REPLACEMENTS) {
             result = result.replace(old, new)
         }
